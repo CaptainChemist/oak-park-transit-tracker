@@ -1,4 +1,7 @@
 import providers from './content/providers.json'
+import { EXTERNAL_SVG, PHONE_SVG } from './icons'
+
+const glyph = (svg) => <span className="glyph" dangerouslySetInnerHTML={{ __html: svg }} />
 
 export default function ProviderGuide() {
   return (
@@ -9,15 +12,27 @@ export default function ProviderGuide() {
           <li key={p.id} className="provider">
             <div className="provider-head">
               <strong>{p.provider}</strong>
-              {!p.verified && <span className="tag tag-warn">unverified</span>}
+              {!p.verified && <span className="tag tag-warn">Not yet verified</span>}
             </div>
-            <div><b>Serves:</b> {p.serves}</div>
-            <div><b>Who can ride:</b> {p.who}</div>
-            {p.phone && <div><b>Phone:</b> <a href={`tel:${p.phone.replace(/\D/g, '')}`}>{p.phone}</a></div>}
-            {p.notes && <div className="muted">{p.notes}</div>}
+            <dl className="facts">
+              <dt>Serves</dt>
+              <dd>{p.serves}</dd>
+              <dt>Who can ride</dt>
+              <dd>{p.who}</dd>
+            </dl>
+            {p.notes && <p className="muted">{p.notes}</p>}
             <div className="links">
+              {p.phone && (
+                <a className="action" href={`tel:${p.phone.replace(/\D/g, '')}`}>
+                  {glyph(PHONE_SVG)}
+                  {p.phone}
+                </a>
+              )}
               {p.links.map((l) => (
-                <a key={l.url} href={l.url} target="_blank" rel="noreferrer">{l.label} ↗</a>
+                <a key={l.url} className="action" href={l.url} target="_blank" rel="noreferrer">
+                  {l.label}
+                  {glyph(EXTERNAL_SVG)}
+                </a>
               ))}
             </div>
             {p.checkedOn && <div className="muted small">Checked {p.checkedOn}</div>}

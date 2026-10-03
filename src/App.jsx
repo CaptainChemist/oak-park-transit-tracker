@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import AboutData from './AboutData'
 import {
   ACCESS,
-  AGENCY_COLORS,
   BUS_RANGE_M,
   FADE_M,
   loadAlerts,
@@ -12,22 +11,127 @@ import {
   loadStops,
   metersFromVillage,
   nearVillage,
+  PALETTES,
 } from './data'
 import MapView from './MapView'
 import ProviderGuide from './ProviderGuide'
 import StatusPanel from './StatusPanel'
-import { BUS_SVG, TRAIN_SVG } from './icons'
+import { BUS_SVG, MOON_SVG, SUN_SVG, TRAIN_SVG } from './icons'
 import { addSnapshot, loadTrails } from './trails'
 
 const BUS_POLL_MS = 30000
 
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
+
 function liveCount(vehicles) {
   const trains = vehicles.filter((v) => v.mode === 'train').length
   const buses = vehicles.length - trains
-  return trains ? `${buses} buses and ${trains} trains` : `${buses} buses`
+  return trains ? `${plural(buses, 'bus', 'buses')} · ${plural(trains, 'train', 'trains')}` : plural(buses, 'bus', 'buses')
 }
 
+const timeOf = (iso) => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+
 const TABS = { status: 'Status', providers: 'Providers', about: 'About the data' }
+
+const THEME_KEY = 'op-transit-theme'
+
+function initialTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'night' ? 'night' : 'day'
+  } catch {
+    return 'day'
+  }
+}
+
+function Glyph({ svg, className = 'glyph' }) {
+  return <span className={className} dangerouslySetInnerHTML={{ __html: svg }} />
+}
+
+function Logo() {
+  return (
+    <svg className="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="8" fill="var(--logo-bg)" />
+      <path d="M6 12h20" stroke="#3DDC84" strokeWidth="3" strokeLinecap="round" />
+      <path d="M6 20h20" stroke="#4CC9F0" strokeWidth="3" strokeLinecap="round" />
+      <path d="M16 6v20" stroke="#FF5C70" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="16" cy="12" r="2.6" fill="#fff" />
+      <circle cx="16" cy="20" r="2.6" fill="#fff" />
+    </svg>
+  )
+}
+
+function LiveStatus({ on, data }) {
+  if (!on) return <span className="live-chip is-off">Live vehicles off</span>
+  if (!data) return <span className="live-chip is-loading">Finding vehicles…</span>
+  if (!data.live)
+    return (
+      <span className="live-chip is-stale" title={data.error}>
+        Live feed unavailable · sample from {timeOf(data.fetchedAt)}
+      </span>
+    )
+  return (
+    <span className="live-chip is-live">
+      <i className="pulse" aria-hidden="true" />
+      <span>
+        <b>{liveCount(data.vehicles)}</b>
+        <span className="live-word"> live</span>
+      </span>
+      <span className="live-time">{timeOf(data.fetchedAt)}</span>
+    </span>
+  )
+}
+
+function Chip({ pressed, onClick, disabled, swatch, children }) {
+  return (
+    <button type="button" className="chip" aria-pressed={pressed} onClick={onClick} disabled={disabled}>
+      {swatch && <i className="swatch" style={{ background: swatch }} />}
+      {children}
+    </button>
+  )
+}
+
+function MapKey({ colorBy, palette }) {
+  // Open on wide screens; folded on phones so it doesn't cover the map
+  const [open] = useState(() => window.matchMedia('(min-width: 861px)').matches)
+  return (
+    <details className="map-key" open={open}>
+      <summary>Map key</summary>
+      <ul>
+        {colorBy === 'access' &&
+          Object.entries(ACCESS).map(([k, a]) => (
+            <li key={k}>
+              <i className="key-dot" style={{ background: palette.access[k] }} />
+              {a.label}
+            </li>
+          ))}
+        <li>
+          <i className="key-dot" />
+          Bus stop
+        </li>
+        <li>
+          <Glyph svg={TRAIN_SVG} className="key-station" />
+          Rail station
+        </li>
+        <li>
+          <Glyph svg={BUS_SVG} className="key-vehicle" />
+          Live bus
+        </li>
+        <li>
+          <Glyph svg={TRAIN_SVG} className="key-vehicle is-train" />
+          Live train
+        </li>
+        <li>
+          <i className="key-ring" />
+          Station alert
+        </li>
+        <li>
+          <i className="key-boundary" />
+          Village line
+        </li>
+      </ul>
+    </details>
+  )
+}
 
 export default function App() {
   const [stops, setStops] = useState([])
@@ -35,6 +139,19 @@ export default function App() {
   const [boundary, setBoundary] = useState(null)
   const [alertData, setAlertData] = useState({ fetchedAt: null, alerts: [] })
   const [error, setError] = useState(null)
+
+  const [theme, setTheme] = useState(initialTheme)
+  const palette = PALETTES[theme]
+  const tabRefs = useRef({})
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    try {
+      localStorage.setItem(THEME_KEY, theme)
+    } catch {
+      // private mode: theme just won't be remembered
+    }
+  }, [theme])
 
   const [tab, setTab] = useState('status')
   const [colorBy, setColorBy] = useState('agency')
@@ -99,116 +216,136 @@ export default function App() {
     [routes, agencies],
   )
 
-  const legend = colorBy === 'agency' ? AGENCY_COLORS : Object.fromEntries(Object.values(ACCESS).map((a) => [a.label, a.color]))
+  const loading = !error && stops.length === 0
+
+  const tabKeys = Object.keys(TABS)
+  const onTabKey = (e) => {
+    const i = tabKeys.indexOf(tab)
+    const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabKeys.length - 1 }[e.key]
+    if (next === undefined) return
+    e.preventDefault()
+    const k = tabKeys[(next + tabKeys.length) % tabKeys.length]
+    setTab(k)
+    tabRefs.current[k]?.focus()
+  }
 
   return (
     <div className="app">
-      <header>
-        <h1>Oak Park Transit</h1>
-        <p>Stops, routes, accessibility and service status for CTA, Pace and Metra in Oak Park</p>
+      <header className="appbar">
+        <div className="brand">
+          <Logo />
+          <div>
+            <h1>Oak Park Transit</h1>
+            <p>Stops, routes, accessibility and live service for CTA, Pace and Metra</p>
+          </div>
+        </div>
+        <div className="appbar-actions">
+          <LiveStatus on={busesOn} data={visibleBuses} />
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={() => setTheme(theme === 'night' ? 'day' : 'night')}
+            aria-label={theme === 'night' ? 'Switch to day map' : 'Switch to night map'}
+          >
+            <Glyph svg={theme === 'night' ? SUN_SVG : MOON_SVG} />
+            <span>{theme === 'night' ? 'Day' : 'Night'}</span>
+          </button>
+        </div>
       </header>
 
       <main>
-        <div className="map-wrap">
-          <div className="controls">
-            <div className="control-group">
+        <section className="map-wrap" aria-label="Transit map">
+          <div className="toolbar">
+            <div className="chip-group" role="group" aria-label="Providers">
               {Object.keys(agencies).map((a) => (
-                <label key={a}>
-                  <input type="checkbox" checked={agencies[a]} onChange={(e) => setAgencies({ ...agencies, [a]: e.target.checked })} />
+                <Chip key={a} pressed={agencies[a]} swatch={palette.agency[a]} onClick={() => setAgencies({ ...agencies, [a]: !agencies[a] })}>
                   {a}
-                </label>
+                </Chip>
               ))}
             </div>
-            <div className="control-group">
-              <label>
-                <input type="checkbox" checked={villageOnly} onChange={(e) => setVillageOnly(e.target.checked)} />
-                Inside Village only
-              </label>
-              <label>
-                <input type="checkbox" checked={showRoutes} onChange={(e) => setShowRoutes(e.target.checked)} />
+            <div className="chip-group" role="group" aria-label="Map layers">
+              <Chip pressed={showRoutes} onClick={() => setShowRoutes(!showRoutes)}>
                 Routes
-              </label>
-              <label>
-                <input type="checkbox" checked={showBuses} onChange={(e) => setShowBuses(e.target.checked)} />
+              </Chip>
+              <Chip pressed={showBuses} onClick={() => setShowBuses(!showBuses)}>
                 Live vehicles
-              </label>
-              <label>
-                <input type="checkbox" checked={showTrails} disabled={!showBuses} onChange={(e) => setShowTrails(e.target.checked)} />
+              </Chip>
+              <Chip pressed={showTrails && showBuses} disabled={!showBuses} onClick={() => setShowTrails(!showTrails)}>
                 Trails
-              </label>
+              </Chip>
+              <Chip pressed={villageOnly} onClick={() => setVillageOnly(!villageOnly)}>
+                Village only
+              </Chip>
             </div>
-            <div className="control-group segmented">
-              <button className={colorBy === 'agency' ? 'on' : ''} onClick={() => setColorBy('agency')}>Color by provider</button>
-              <button className={colorBy === 'access' ? 'on' : ''} onClick={() => setColorBy('access')}>Color by accessibility</button>
+            <div className="segmented" role="group" aria-label="Color stops by">
+              <button type="button" aria-pressed={colorBy === 'agency'} onClick={() => setColorBy('agency')}>
+                Provider
+              </button>
+              <button type="button" aria-pressed={colorBy === 'access'} onClick={() => setColorBy('access')}>
+                Accessibility
+              </button>
             </div>
           </div>
 
-          {error ? (
-            <div className="error">Couldn't load data: {error}</div>
-          ) : (
-            <MapView
-              stops={visibleStops}
-              routes={visibleRoutes}
-              boundary={boundary}
-              fade={villageOnly}
-              alerts={alertData.alerts}
-              colorBy={colorBy}
-              showRoutes={showRoutes}
-              buses={visibleBuses}
-              trails={showTrails && visibleBuses?.live ? trails : null}
-            />
-          )}
-
-          <div className="legend">
-            {Object.entries(legend).map(([label, color]) => (
-              <span key={label}>
-                <i style={{ background: color }} />
-                {label}
-              </span>
-            ))}
-            <span>
-              <i className="dot" />
-              Bus stop
-            </span>
-            <span>
-              <b className="legend-station" dangerouslySetInnerHTML={{ __html: TRAIN_SVG }} />
-              Rail station
-            </span>
-            <span>
-              <b className="legend-bus" dangerouslySetInnerHTML={{ __html: BUS_SVG }} />
-              Live bus
-            </span>
-            <span>
-              <b className="legend-bus legend-train" dangerouslySetInnerHTML={{ __html: TRAIN_SVG }} />
-              Live train
-            </span>
-            <span>
-              <i className="ring" />
-              Station with alert
-            </span>
-            <span className="muted">{visibleStops.length} stops shown</span>
-            {visibleBuses && (
-              <span className={visibleBuses.live ? 'live' : 'stale'}>
-                {visibleBuses.live
-                  ? `● ${liveCount(visibleBuses.vehicles)} live, updated ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`
-                  : `Live feed unavailable. Showing a saved sample from ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`}
-              </span>
+          <div className="map-stage">
+            {error ? (
+              <div className="map-error" role="alert">
+                <b>The map data didn't load.</b>
+                <span>{error}. Check your connection and reload the page.</span>
+              </div>
+            ) : (
+              <MapView
+                stops={visibleStops}
+                routes={visibleRoutes}
+                boundary={boundary}
+                fade={villageOnly}
+                alerts={alertData.alerts}
+                colorBy={colorBy}
+                showRoutes={showRoutes}
+                buses={visibleBuses}
+                trails={showTrails && visibleBuses?.live ? trails : null}
+                theme={theme}
+                palette={palette}
+              />
             )}
+            {loading && (
+              <div className="map-toast" role="status">
+                Loading stops and routes…
+              </div>
+            )}
+            {!error && <MapKey colorBy={colorBy} palette={palette} />}
+            {!loading && !error && <span className="stop-count">{plural(visibleStops.length, 'stop', 'stops')}</span>}
           </div>
-        </div>
+        </section>
 
-        <aside>
-          <nav className="tabs">
+        <aside aria-label="Service information">
+          <nav className="tabs" role="tablist" aria-label="Panels" onKeyDown={onTabKey}>
             {Object.entries(TABS).map(([k, label]) => (
-              <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+              <button
+                key={k}
+                ref={(el) => (tabRefs.current[k] = el)}
+                id={`tab-${k}`}
+                role="tab"
+                type="button"
+                aria-selected={tab === k}
+                aria-controls={`panel-${k}`}
+                tabIndex={tab === k ? 0 : -1}
+                onClick={() => setTab(k)}
+              >
                 {label}
-                {k === 'status' && alertData.alerts.length > 0 && <span className="badge">{alertData.alerts.length}</span>}
+                {k === 'status' && alertData.alerts.length > 0 && (
+                  <span className="badge" aria-label={`${alertData.alerts.length} alerts`}>
+                    {alertData.alerts.length}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
-          {tab === 'status' && <StatusPanel alerts={alertData.alerts} fetchedAt={alertData.fetchedAt} />}
-          {tab === 'providers' && <ProviderGuide />}
-          {tab === 'about' && <AboutData />}
+          <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} tabIndex={0} className="tabpanel">
+            {tab === 'status' && <StatusPanel alerts={alertData.alerts} fetchedAt={alertData.fetchedAt} />}
+            {tab === 'providers' && <ProviderGuide />}
+            {tab === 'about' && <AboutData />}
+          </div>
         </aside>
       </main>
     </div>

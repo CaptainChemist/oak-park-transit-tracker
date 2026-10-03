@@ -1,22 +1,20 @@
 import L from 'leaflet'
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
-import { ACCESS, AGENCY_COLORS, accessOf, routeIds } from './data'
+import { ACCESS, accessOf, routeIds } from './data'
 import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES, vehicleKey } from './trails'
 
 const CENTER = [41.8875, -87.7915]
 
-const LINE_COLORS = { Green: '#009B3A', Blue: '#00A1DE' }
-
-const vehicleColor = (v) => (v.mode === 'train' ? LINE_COLORS[v.route] : AGENCY_COLORS[v.agency])
+const vehicleColor = (v, palette) => (v.mode === 'train' ? palette.lines[v.route] : palette.agency[v.agency])
 
 // Reuse icon objects so Leaflet only swaps a vehicle's DOM element when its
 // route or heading changes. A fresh icon every render replaced the element
 // under the cursor, which could eat clicks and stopped the glide transition.
 const vehicleIcons = new Map()
 
-function vehicleIcon(v, live) {
-  const color = live ? vehicleColor(v) : '#9CA3AF'
+function vehicleIcon(v, live, palette) {
+  const color = live ? vehicleColor(v, palette) : palette.stale
   const train = v.mode === 'train'
   const heading = Math.round(v.heading / 15) * 15
   const key = `${train}|${color}|${v.route}|${heading}`
@@ -25,7 +23,7 @@ function vehicleIcon(v, live) {
       key,
       L.divIcon({
         className: 'bus-marker',
-        html: `<div class="bus ${train ? 'train' : ''}" style="background:${color}">${train ? TRAIN_SVG : BUS_SVG}<span>${v.route}</span><i class="bus-dir" style="transform: rotate(${heading}deg)">${ARROW_SVG}</i></div>`,
+        html: `<div class="bus ${train ? 'train' : ''} ${live ? '' : 'bus-stale'}" style="--vehicle:${color}">${train ? TRAIN_SVG : BUS_SVG}<span>${v.route}</span><i class="bus-dir" style="transform: rotate(${heading}deg)">${ARROW_SVG}</i></div>`,
         iconSize: [56, 22],
         iconAnchor: [28, 11],
       }),
@@ -43,23 +41,22 @@ function stationIcon(fill, alert) {
   })
 }
 
-const BOUNDARY_COLOR = '#374151' // neutral, so it doesn't read as a Pace route
-const FADE_COLOR = '#f7f7f5' // matches --bg in index.css
+// Boundary and fade colors come from the theme palette (PALETTES in data.js)
 const FADE_MAX = 1 // basemap opacity hidden past 1/4 mile; lower to keep faint streets
 
 // Fade masks are stacked, each covering everything past its distance from the
 // Village line. Pick each mask's opacity so the stack ramps linearly to FADE_MAX.
-function fadeStyle(feature, steps) {
+function fadeStyle(feature, steps, fadeColor) {
   const k = feature.properties.step
   const cover = (i) => (i < 0 ? 0 : (FADE_MAX * (i + 1)) / steps)
   return {
     stroke: false,
-    fillColor: FADE_COLOR,
+    fillColor: fadeColor,
     fillOpacity: 1 - (1 - cover(k)) / (1 - cover(k - 1)),
   }
 }
 
-function Boundary({ data, fade }) {
+function Boundary({ data, fade, palette, theme }) {
   const fades = { ...data, features: data.features.filter((f) => f.properties.kind === 'fade') }
   const village = { ...data, features: data.features.filter((f) => f.properties.kind === 'village') }
   return (
@@ -67,32 +64,36 @@ function Boundary({ data, fade }) {
       {/* Over tiles (200) and route lines/bus trails (400) so they fade out with the
           basemap; under the Village line (450), bus stops (460) and icons (600) */}
       <Pane name="fade" style={{ zIndex: 420 }}>
-        {fade && <GeoJSON data={fades} style={(f) => fadeStyle(f, fades.features.length)} interactive={false} />}
+        {fade && <GeoJSON key={theme} data={fades} style={(f) => fadeStyle(f, fades.features.length, palette.fade)} interactive={false} />}
       </Pane>
       {/* Above routes (400) so Harlem/Austin bus lines don't hide it; below bus stops (460) and icons (600) */}
       <Pane name="boundary" style={{ zIndex: 450 }}>
-        <GeoJSON data={village} style={{ color: BOUNDARY_COLOR, weight: 3, dashArray: '10 6', fill: false }} interactive={false} />
+        <GeoJSON key={theme} data={village} style={{ color: palette.boundary, weight: 2.5, opacity: 0.85, dashArray: '8 6', fill: false }} interactive={false} />
       </Pane>
     </>
   )
 }
 
-function routeStyle(feature) {
+const routeStyle = (palette, night) => (feature) => {
   const p = feature.properties
   const rail = p.type !== 3 // GTFS route_type 3 = bus
+  const railColor = palette.lines[{ G: 'Green', Blue: 'Blue' }[p.route]] ?? (p.agency === 'Metra' ? palette.agency.Metra : p.color)
   return {
-    color: rail ? p.color : AGENCY_COLORS[p.agency],
+    color: rail ? railColor : palette.agency[p.agency],
     weight: rail ? 5 : 2.5,
-    opacity: rail ? 0.9 : 0.45,
+    opacity: rail ? (night ? 0.75 : 0.85) : night ? 0.4 : 0.35,
+    lineCap: 'round',
   }
 }
 
-function StopPopup({ stop, alerts }) {
-  const access = ACCESS[accessOf(stop)]
+function StopPopup({ stop, alerts, palette }) {
+  const key = accessOf(stop)
+  const access = ACCESS[key]
   return (
     <div className="popup">
       <strong>{stop.stop_name}</strong>
-      <div className="popup-agency" style={{ color: AGENCY_COLORS[stop.agency] }}>
+      <div className="popup-agency">
+        <i className="swatch" style={{ background: palette.agency[stop.agency] }} />
         {stop.agency} {stop.stop_type === 'rail_station' ? 'station' : 'bus stop'}
         {stop.in_oak_park === 'N' && ' · just outside the Village'}
       </div>
@@ -102,7 +103,7 @@ function StopPopup({ stop, alerts }) {
       </div>
       <div>
         <b>Wheelchair boarding:</b>{' '}
-        <span className="access-pill" style={{ background: access.color }}>{access.label}</span>
+        <span className="access-pill" style={{ '--pill': palette.access[key] }}>{access.label}</span>
       </div>
       {stop.weekday_trips && (
         <div className="muted">
@@ -111,7 +112,7 @@ function StopPopup({ stop, alerts }) {
       )}
       {alerts.length > 0 && (
         <div className="popup-alerts">
-          <b>⚠ {alerts.length} active alert{alerts.length > 1 ? 's' : ''}</b>
+          <b>{alerts.length} active alert{alerts.length > 1 ? 's' : ''}</b>
           <ul>
             {alerts.slice(0, 3).map((a) => (
               <li key={a.id}>{a.headline}</li>
@@ -123,38 +124,60 @@ function StopPopup({ stop, alerts }) {
   )
 }
 
-// One segment per hop so older parts of the trail fade out
-function Trail({ points, color, now }) {
+// One segment per hop so older parts of the trail fade out. At night each hop
+// also gets a wide, faint underlay so the trail glows against the dark map.
+function Trail({ points, color, now, night }) {
   const maxAge = TRAIL_MINUTES * 60_000
-  return points.slice(1).map((p, i) => {
+  return points.slice(1).flatMap((p, i) => {
     const prev = points[i]
     const fresh = Math.max(0, 1 - (now - p.t) / maxAge)
-    return (
+    const positions = [[prev.lat, prev.lon], [p.lat, p.lon]]
+    const line = (
       <Polyline
         key={p.t}
-        positions={[[prev.lat, prev.lon], [p.lat, p.lon]]}
-        pathOptions={{ color, weight: 4, opacity: 0.15 + 0.7 * fresh, lineCap: 'round', interactive: false }}
+        positions={positions}
+        pathOptions={{ color, weight: night ? 3 : 4, opacity: 0.15 + 0.75 * fresh, lineCap: 'round', interactive: false }}
       />
     )
+    if (!night) return [line]
+    return [
+      <Polyline
+        key={`${p.t}-glow`}
+        positions={positions}
+        pathOptions={{ color, weight: 11, opacity: 0.05 + 0.15 * fresh, lineCap: 'round', interactive: false }}
+      />,
+      line,
+    ]
   })
 }
 
-export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, buses, trails }) {
+export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, buses, trails, theme, palette }) {
+  const night = theme === 'night'
   const alertsFor = (stop) =>
     alerts.filter(
       (a) => a.stationIds.includes(stop.stop_id) || (stop.agency === 'CTA' && a.routes.some((r) => routeIds(stop).includes(r))),
     )
   const now = Date.now()
-  const fillFor = (s) => (colorBy === 'access' ? ACCESS[accessOf(s)].color : AGENCY_COLORS[s.agency])
+  const fillFor = (s) => (colorBy === 'access' ? palette.access[accessOf(s)] : palette.agency[s.agency])
 
   return (
     <MapContainer center={CENTER} zoom={14} className="map" scrollWheelZoom preferCanvas>
+      {/* Esri Canvas basemap (no key): muted base plus a separate street-label layer */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        key={palette.tiles}
+        attribution='Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url={`https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${palette.tiles}_Gray_Base/MapServer/tile/{z}/{y}/{x}`}
+        maxZoom={19}
+        maxNativeZoom={16}
       />
-      {boundary && <Boundary data={boundary} fade={fade} />}
-      {showRoutes && routes && <GeoJSON key="routes" data={routes} style={routeStyle} />}
+      <TileLayer
+        key={`${palette.tiles}-labels`}
+        url={`https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_${palette.tiles}_Gray_Reference/MapServer/tile/{z}/{y}/{x}`}
+        maxZoom={19}
+        maxNativeZoom={16}
+      />
+      {boundary && <Boundary data={boundary} fade={fade} palette={palette} theme={theme} />}
+      {showRoutes && routes && <GeoJSON key={`routes-${theme}`} data={routes} style={routeStyle(palette, night)} />}
 
       {/* Own pane so bus stops draw over the Village line (450) but under station/bus icons (600) */}
       <Pane name="stops" style={{ zIndex: 460 }}>
@@ -165,21 +188,28 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
               key={`${s.agency}-${s.stop_id}`}
               center={[s.lat, s.lon]}
               radius={4.5}
-              pathOptions={{ color: '#fff', weight: 1.5, fillColor: fillFor(s), fillOpacity: 0.95 }}
+              pathOptions={{ color: palette.ring, weight: 1.5, fillColor: fillFor(s), fillOpacity: 0.95 }}
             >
               <Popup>
-                <StopPopup stop={s} alerts={alertsFor(s)} />
+                <StopPopup stop={s} alerts={alertsFor(s)} palette={palette} />
               </Popup>
             </CircleMarker>
           ))}
       </Pane>
 
-      {buses &&
-        trails &&
-        buses.vehicles.map((v) => {
-          const key = vehicleKey(v)
-          return trails[key]?.length > 1 && <Trail key={`trail-${key}`} points={trails[key]} color={vehicleColor(v)} now={now} />
-        })}
+      {/* Own pane under the fade (420) so trails fade with the basemap; blends as light at night */}
+      <Pane name="trails" style={{ zIndex: 410 }}>
+        {buses &&
+          trails &&
+          buses.vehicles.map((v) => {
+            const key = vehicleKey(v)
+            return (
+              trails[key]?.length > 1 && (
+                <Trail key={`trail-${key}-${theme}`} points={trails[key]} color={vehicleColor(v, palette)} now={now} night={night} />
+              )
+            )
+          })}
+      </Pane>
 
       {stops
         .filter((s) => s.stop_type === 'rail_station')
@@ -191,13 +221,13 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
             zIndexOffset={500}
           >
             <Popup>
-              <StopPopup stop={s} alerts={alertsFor(s)} />
+              <StopPopup stop={s} alerts={alertsFor(s)} palette={palette} />
             </Popup>
           </Marker>
         ))}
 
       {buses?.vehicles?.map((v) => (
-        <Marker key={vehicleKey(v)} position={[v.lat, v.lon]} icon={vehicleIcon(v, buses.live)} zIndexOffset={v.mode === 'train' ? 1100 : 1000}>
+        <Marker key={vehicleKey(v)} position={[v.lat, v.lon]} icon={vehicleIcon(v, buses.live, palette)} zIndexOffset={v.mode === 'train' ? 1100 : 1000}>
           <Popup>
             <div className="popup">
               {v.mode === 'train' ? (
@@ -205,14 +235,14 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
                   <strong>CTA {v.route} Line train {v.routeName}</strong>
                   <div>
                     Run #{v.id}
-                    {v.delayed && <b> · delayed</b>}
+                    {v.delayed && <b className="delayed"> · Delayed</b>}
                   </div>
                   {v.nextStop && <div>{v.approaching ? 'Arriving at' : 'Next stop:'} {v.nextStop}</div>}
                 </>
               ) : (
                 <>
                   <strong>{v.agency} {v.route} {v.routeName}</strong>
-                  <div>Bus #{v.id}{v.delayed && <b> · delayed</b>}</div>
+                  <div>Bus #{v.id}{v.delayed && <b className="delayed"> · Delayed</b>}</div>
                 </>
               )}
               <div className="muted">

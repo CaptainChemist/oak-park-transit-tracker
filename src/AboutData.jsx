@@ -29,7 +29,10 @@ export default function AboutData() {
           Live Pace buses (routes 307, 309, 311, 313, 314, 315, 318): Pace's {link('https://tmweb.pacebus.com/TMWebWatch/', 'Bus Tracker')} map.
           Pace has no official live data feed, so this could stop working without notice.
         </li>
-        <li>Base map: {link('https://www.openstreetmap.org/copyright', 'OpenStreetMap')} contributors</li>
+        <li>
+          Base map: {link('https://www.esri.com/', 'Esri')} Light and Dark Gray Canvas, with{' '}
+          {link('https://www.openstreetmap.org/copyright', 'OpenStreetMap')} contributors
+        </li>
       </ul>
       <h3>How the map works</h3>
       <ul>
@@ -37,7 +40,7 @@ export default function AboutData() {
         <li>Only buses and trains within 1/4 mile of the Village line are shown.</li>
         <li>If the live feed is down, the map shows a saved sample in gray and says it isn't live.</li>
         <li>
-          "Inside Village only" shows stops in Oak Park plus the ones just across Austin and Harlem, and fades out the map and route
+          "Village only" shows stops in Oak Park plus the ones just across Austin and Harlem, and fades out the map and route
           lines beyond 1/4 mile.
         </li>
       </ul>

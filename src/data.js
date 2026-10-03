@@ -15,6 +15,31 @@ export const ACCESS = {
   unknown: { label: 'Unknown', color: '#6B7280' },
 }
 
+// Map colors per theme. Night lifts every hue so lines and markers read on the
+// dark basemap; day keeps the agencies' own brand colors.
+export const PALETTES = {
+  day: {
+    agency: AGENCY_COLORS,
+    lines: { Green: '#00843D', Blue: '#0079B8' }, // darker than CTA brand so white labels pass contrast
+    access: { yes: '#15803D', no: '#B91C1C', unknown: '#6B7280' },
+    stale: '#9CA3AF',
+    ring: '#FFFFFF',
+    boundary: '#3A3F47',
+    fade: '#F4F2EC', // matches --bg in index.css
+    tiles: 'Light',
+  },
+  night: {
+    agency: { CTA: '#FF5C70', Pace: '#5AA2FF', Metra: '#F7B23B' },
+    lines: { Green: '#3DDC84', Blue: '#4CC9F0' },
+    access: { yes: '#4ADE80', no: '#F87171', unknown: '#9CA3AF' },
+    stale: '#6B7280',
+    ring: '#0B0E13',
+    boundary: '#C9CED6',
+    fade: '#0B0E13',
+    tiles: 'Dark',
+  },
+}
+
 export function accessOf(stop) {
   if (stop.wheelchair_boarding === '1') return 'yes'
   if (stop.wheelchair_boarding === '2') return 'no'
