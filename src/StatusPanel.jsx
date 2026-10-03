@@ -12,7 +12,7 @@ function Icon({ svg, tone }) {
   return <span className={`alert-icon tone-${tone}`} dangerouslySetInnerHTML={{ __html: svg }} />
 }
 
-function Alert({ a }) {
+export function Alert({ a }) {
   return (
     <li className="alert">
       <Icon svg={a.accessibility ? ELEVATOR_SVG : ALERT_SVG} tone={a.accessibility ? 'access' : a.major ? 'major' : 'info'} />

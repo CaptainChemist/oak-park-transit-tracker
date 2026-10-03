@@ -407,7 +407,7 @@ export default function App() {
           <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} tabIndex={0} className="tabpanel">
             {tab === 'status' && <StatusPanel alerts={alertData.alerts} fetchedAt={alertData.fetchedAt} />}
             {tab === 'routes' && (
-              <RoutesPanel service={service} selected={route} onSelect={pickRoute} day={day} setDay={setDay} palette={palette} />
+              <RoutesPanel service={service} selected={route} onSelect={pickRoute} day={day} setDay={setDay} palette={palette} alerts={alertData.alerts} />
             )}
             {tab === 'providers' && <ProviderGuide />}
             {tab === 'about' && <AboutData />}

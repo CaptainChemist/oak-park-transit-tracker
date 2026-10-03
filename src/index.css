@@ -1457,3 +1457,9 @@ aside {
   border-color: #d97706;
   color: #1a1d22;
 }
+
+.route-alert-count {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: 1px;
+}

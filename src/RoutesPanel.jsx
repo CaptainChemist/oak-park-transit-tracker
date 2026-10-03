@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { routeColor } from './data'
 import Fare from './Fare'
 import { every, hourRange } from './hours'
+import { Alert } from './StatusPanel'
 
 // Recharts is big; only load it once someone opens a route
 const FrequencyChart = lazy(() => import('./FrequencyChart'))
@@ -40,9 +41,57 @@ function DayPicker({ day, setDay }) {
   )
 }
 
+// CTA alerts name lines by id ("G", "Blue", "66"); we only have a CTA alert feed
+export function routeAlerts(route, alerts) {
+  if (route.agency !== 'CTA' || !alerts) return []
+  const id = route.route === 'Green' ? 'G' : route.route
+  return alerts.filter((a) => a.routes.includes(id))
+}
+
+const OTHER_ALERTS = {
+  Pace: { label: 'pacebus.com', url: 'https://www.pacebus.com/' },
+  Metra: { label: "Metra's Oak Park station page", url: 'https://metra.com/train-lines/stations/oak-park' },
+}
+
+function RouteAlerts({ route, alerts }) {
+  const other = OTHER_ALERTS[route.agency]
+  if (other) {
+    return (
+      <section className="direction">
+        <h3>Service alerts</h3>
+        <p className="muted small">
+          {route.agency} alerts aren't included here. Check{' '}
+          <a href={other.url} target="_blank" rel="noreferrer">
+            {other.label}
+          </a>
+          .
+        </p>
+      </section>
+    )
+  }
+  const mine = routeAlerts(route, alerts)
+  return (
+    <section className="direction">
+      <h3>Service alerts{mine.length > 0 && ` (${mine.length})`}</h3>
+      {mine.length === 0 ? (
+        <p className="empty">No CTA alerts for this route right now.</p>
+      ) : (
+        <>
+          <ul className="alerts">
+            {mine.map((a) => (
+              <Alert key={a.id} a={a} />
+            ))}
+          </ul>
+          {isRail(route) && <p className="muted small">Alerts cover the whole line, so some may be outside Oak Park.</p>}
+        </>
+      )}
+    </section>
+  )
+}
+
 const spanText = (s) => (!s ? 'No service' : s.allDay ? '24 hours' : `${s.first} – ${s.last}`)
 
-function RouteDetail({ routeKey, route, service, day, setDay, palette, onClear }) {
+function RouteDetail({ routeKey, route, service, day, setDay, palette, onClear, alerts }) {
   const color = routeColor(routeKey, palette)
   const dirs = route.days[day] || []
   const yMax = Math.max(1, ...dirs.flatMap((d) => d.hourly))
@@ -61,6 +110,8 @@ function RouteDetail({ routeKey, route, service, day, setDay, palette, onClear }
         </div>
       </div>
       <p className="muted small">The map shows only this route, its stops and its live {units}.</p>
+
+      <RouteAlerts route={route} alerts={alerts} />
 
       <section className="direction">
         <h3>Fare</h3>
@@ -105,7 +156,7 @@ function RouteDetail({ routeKey, route, service, day, setDay, palette, onClear }
   )
 }
 
-export default function RoutesPanel({ service, selected, onSelect, day, setDay, palette }) {
+export default function RoutesPanel({ service, selected, onSelect, day, setDay, palette, alerts }) {
   if (!service) return <div className="panel muted">Loading routes…</div>
   const entries = Object.entries(service.routes)
   if (selected && service.routes[selected]) {
@@ -117,6 +168,7 @@ export default function RoutesPanel({ service, selected, onSelect, day, setDay, 
         day={day}
         setDay={setDay}
         palette={palette}
+        alerts={alerts}
         onClear={() => onSelect(null)}
       />
     )
@@ -139,7 +191,14 @@ export default function RoutesPanel({ service, selected, onSelect, day, setDay, 
                 <li key={k}>
                   <button type="button" className="route-row" onClick={() => onSelect(k)}>
                     <RouteBadge routeKey={k} route={r} palette={palette} />
-                    <span className="route-row-name">{r.name}</span>
+                    <span className="route-row-name">
+                      {r.name}
+                      {routeAlerts(r, alerts).length > 0 && (
+                        <span className="badge route-alert-count" aria-label={`${routeAlerts(r, alerts).length} alerts`}>
+                          {routeAlerts(r, alerts).length}
+                        </span>
+                      )}
+                    </span>
                     <span className="muted small">{spanText(r.spans?.[day])}</span>
                   </button>
                 </li>
