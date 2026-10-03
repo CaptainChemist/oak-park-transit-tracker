@@ -196,10 +196,3 @@ export function trip(net, day, start, end, t0) {
   }
   return { minutes, walkOnly, legs: out }
 }
-
-// 5-minute bands for the heat map and legend (HEAT in TravelPanel has one color per band, plus 60+)
-export const BANDS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
-export const band = (m) => {
-  const i = BANDS.findIndex((b) => m < b)
-  return i < 0 ? BANDS.length : i
-}

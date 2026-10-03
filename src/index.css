@@ -1311,14 +1311,8 @@ aside {
 }
 
 .heat-strip {
-  display: flex;
   height: 14px;
   border-radius: 4px;
-  overflow: hidden;
-}
-
-.heat-strip i {
-  flex: 1;
 }
 
 .heat-ticks {
@@ -1327,9 +1321,19 @@ aside {
   margin-top: 3px;
 }
 
+/* Ticks centered on their minute; the ends align to the strip's edges */
 .heat-ticks span {
   position: absolute;
+  transform: translateX(-50%);
   white-space: nowrap;
+}
+
+.heat-ticks .is-first {
+  transform: none;
+}
+
+.heat-ticks .is-last {
+  transform: translateX(-100%);
 }
 
 .legs {

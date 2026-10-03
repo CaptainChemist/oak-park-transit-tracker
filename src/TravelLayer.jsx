@@ -1,8 +1,8 @@
 import L from 'leaflet'
-import { Marker, Pane, Polyline, Rectangle, useMapEvents } from 'react-leaflet'
+import { useMemo } from 'react'
+import { ImageOverlay, Marker, Pane, Polyline, useMapEvents } from 'react-leaflet'
 import { routeColor } from './data'
-import { band } from './travel'
-import { HEAT } from './TravelPanel'
+import { heatImage } from './heat'
 
 const pinIcon = (which) =>
   L.divIcon({
@@ -13,35 +13,19 @@ const pinIcon = (which) =>
   })
 const ICONS = { start: pinIcon('start'), end: pinIcon('end') }
 
-// Cell edges from a center: half a cell each way in degrees, 3% oversized so
-// neighbors overlap instead of leaving hairline seams from rounding
-const halfLat = (m) => (m * 0.515) / 111320
-const halfLon = (m, lat) => (m * 0.515) / (111320 * Math.cos((lat * Math.PI) / 180))
-
 function Clicks({ placing, onPlace }) {
   useMapEvents({ click: (e) => placing && onPlace(placing, [e.latlng.lat, e.latlng.lng]) })
   return null
 }
 
 export default function TravelLayer({ cells, cellM, minutes, start, end, placing, onPlace, result, palette }) {
+  const heat = useMemo(() => (minutes ? heatImage(cells, cellM, minutes) : null), [cells, cellM, minutes])
   return (
     <>
       <Clicks placing={placing} onPlace={onPlace} />
-      {/* Over the basemap (200), under route lines (400) so streets and lines stay readable.
-          Cells are opaque and the pane is see-through, so where cells overlap they don't darken. */}
-      <Pane name="heat" style={{ zIndex: 300, opacity: 0.55 }}>
-        {minutes &&
-          cells.map(([lat, lon], i) => (
-            <Rectangle
-              key={i}
-              bounds={[
-                [lat - halfLat(cellM), lon - halfLon(cellM, lat)],
-                [lat + halfLat(cellM), lon + halfLon(cellM, lat)],
-              ]}
-              pathOptions={{ stroke: false, fillColor: HEAT[band(minutes[i])], fillOpacity: 1 }}
-              interactive={false}
-            />
-          ))}
+      {/* Over the basemap (200), under route lines (400) so streets and lines stay readable */}
+      <Pane name="heat" style={{ zIndex: 300 }}>
+        {heat && <ImageOverlay key={heat.url} url={heat.url} bounds={heat.bounds} opacity={0.6} interactive={false} />}
       </Pane>
       {/* The trip: walks dashed, rides in the route's color, over everything but icons */}
       <Pane name="trip" style={{ zIndex: 470 }}>

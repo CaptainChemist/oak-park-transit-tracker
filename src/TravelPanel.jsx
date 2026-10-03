@@ -1,13 +1,6 @@
 import { routeColor } from './data'
+import { heatGradient, MAX_MIN } from './heat'
 import { DAYS } from './RoutesPanel'
-import { BANDS } from './travel'
-
-// Viridis sampled at 13 even steps (one per band in travel.js BANDS, plus 60+):
-// perceptually even and colorblind-safe; bright = quick, dark = slow
-export const HEAT = [
-  '#FDE725', '#C8E020', '#90D743', '#5EC962', '#35B779', '#20A486', '#21918C',
-  '#287C8E', '#31688E', '#3B528B', '#443983', '#481F70', '#440154',
-]
 
 const clock = (m) => {
   const h = Math.floor(m / 60) % 24
@@ -16,22 +9,18 @@ const clock = (m) => {
 }
 const mins = (m) => `${Math.max(1, Math.round(m))} min`
 
-// One block per 5-minute band, labeled every 15 minutes
+// Continuous scale, labeled every 15 minutes
 function Legend() {
+  const ticks = [0, 15, 30, 45, MAX_MIN]
   return (
-    <div className="heat-legend" role="img" aria-label="Colors in 5-minute steps from 0 to 60 minutes and over">
-      <div className="heat-strip">
-        {HEAT.map((c, i) => (
-          <i key={c} style={{ background: c }} title={i < BANDS.length ? `${i ? BANDS[i - 1] : 0}–${BANDS[i]} min` : `${BANDS.at(-1)}+ min`} />
-        ))}
-      </div>
+    <div className="heat-legend" role="img" aria-label={`Colors run smoothly from 0 to ${MAX_MIN} minutes and over`}>
+      <div className="heat-strip" style={{ background: heatGradient }} />
       <div className="heat-ticks muted small">
-        {[0, 15, 30, 45].map((m) => (
-          <span key={m} style={{ left: `${(m / 5 / HEAT.length) * 100}%` }}>
-            {m}
+        {ticks.map((m) => (
+          <span key={m} style={{ left: `${(m / MAX_MIN) * 100}%` }} className={m === MAX_MIN ? 'is-last' : m === 0 ? 'is-first' : ''}>
+            {m === MAX_MIN ? `${m}+ min` : m}
           </span>
         ))}
-        <span style={{ left: `${(12 / HEAT.length) * 100}%` }}>60+ min</span>
       </div>
     </div>
   )
