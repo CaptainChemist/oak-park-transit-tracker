@@ -1,11 +1,14 @@
 // Travel-time estimates for the Travel tab, computed in the browser from
 // public/data/travel.json (scripts/build_travel.py). A small RAPTOR: walk to
-// nearby stops, ride up to two vehicles with a walking transfer between, walk
+// nearby stops, ride up to three vehicles with walking transfers between, walk
 // to the destination. Times are minutes since midnight of the service day.
+//
+// Walking follows real streets (OpenStreetMap). The build script measured
+// street-network minutes from each 100 m cell to nearby stops and to its 8
+// neighbor cells, and between stops; here a pin snaps to its nearest cell and
+// walking spreads over that cell graph. So the Eisenhower is crossed only
+// where a street actually crosses it.
 
-const WALK_M_PER_MIN = 78 // 1.3 m/s, about 3 mph
-const ACCESS_M = 1200 // longest walk to or from a stop (~15 min)
-const TRANSFER_M = 400 // longest walk between stops when transferring
 // Up to three vehicles: e.g. 86 down Ridgeland, Green Line to Austin, 91 south.
 // Oak Park's routes are short straight lines, so corner-to-corner trips need it.
 const RIDES = 3
@@ -13,29 +16,77 @@ const KY = 111320
 const KX = 111320 * Math.cos((41.887 * Math.PI) / 180)
 const INF = 1e9
 
-// Oak Park streets are a north-south/east-west grid, so walking distance is
-// closer to |dx| + |dy| than to a straight line
 const xy = ([lat, lon]) => [lon * KX, lat * KY]
-const walkMin = (a, b) => (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])) / WALK_M_PER_MIN
-const meters = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])
 
 export function prepare(data) {
-  const stops = data.stops.map(xy)
-  const near = (p, max) => {
-    const out = []
-    stops.forEach((s, i) => meters(p, s) <= max && out.push([i, walkMin(p, s)]))
-    return out
-  }
-  const cells = data.cells.map(xy)
-  return {
-    raw: data,
-    stops,
-    cells,
-    transfers: stops.map((s, i) => near(s, TRANSFER_M).filter(([j]) => j !== i)),
-    cellStops: cells.map((c) => near(c, ACCESS_M)),
-    near,
-  }
+  const { speed, cellStops, cellNbrs, transfers } = data.walk
+  return { raw: data, cells: data.cells.map(xy), speed, cellStops, cellNbrs, transfers, stopCount: data.stops.length }
 }
+
+// A pin: its nearest cell, plus the straight walk to that cell's center
+// (under ~70 m inside the Village)
+function anchor(net, ll) {
+  const p = xy(ll)
+  let cell = 0
+  let best = INF
+  net.cells.forEach((c, i) => {
+    const d = Math.hypot(c[0] - p[0], c[1] - p[1])
+    if (d < best) {
+      best = d
+      cell = i
+    }
+  })
+  return { cell, snap: best / net.speed }
+}
+
+// Walking minutes from an anchor to every cell over the cell graph (Dijkstra).
+// The graph is symmetric, so this is also minutes from every cell to it.
+function walkCells(net, { cell, snap }) {
+  const dist = new Float64Array(net.cells.length).fill(INF)
+  dist[cell] = snap
+  const heap = [[snap, cell]]
+  const push = (item) => {
+    heap.push(item)
+    for (let i = heap.length - 1; i > 0; ) {
+      const up = (i - 1) >> 1
+      if (heap[up][0] <= heap[i][0]) break
+      ;[heap[up], heap[i]] = [heap[i], heap[up]]
+      i = up
+    }
+  }
+  const pop = () => {
+    const top = heap[0]
+    const last = heap.pop()
+    if (heap.length) {
+      heap[0] = last
+      for (let i = 0; ; ) {
+        const l = 2 * i + 1
+        const r = l + 1
+        let m = i
+        if (l < heap.length && heap[l][0] < heap[m][0]) m = l
+        if (r < heap.length && heap[r][0] < heap[m][0]) m = r
+        if (m === i) break
+        ;[heap[m], heap[i]] = [heap[i], heap[m]]
+        i = m
+      }
+    }
+    return top
+  }
+  while (heap.length) {
+    const [d, c] = pop()
+    if (d > dist[c]) continue
+    for (const [n, w] of net.cellNbrs[c]) {
+      if (d + w < dist[n]) {
+        dist[n] = d + w
+        push([d + w, n])
+      }
+    }
+  }
+  return dist
+}
+
+// Stops reachable on foot from an anchor: its cell's street-network list plus the snap
+const stopsNear = (net, a) => net.cellStops[a.cell].map(([s, w]) => [s, w + a.snap])
 
 // First trip in a pattern leaving stop column i at or after time t (trips are sorted)
 function firstTrip(rows, i, t) {
@@ -49,12 +100,12 @@ function firstTrip(rows, i, t) {
   return lo < rows.length ? lo : -1
 }
 
-// Earliest arrival at every stop leaving point p (meters) at time t0
-function raptor(net, day, p, t0) {
-  const n = net.stops.length
+// Earliest arrival at every stop, starting with a walk to the `access` stops ([stop, min]) at t0
+function raptor(net, day, access, t0) {
+  const n = net.stopCount
   const best = new Float64Array(n).fill(INF)
   const prev = Array.from({ length: n })
-  for (const [s, w] of net.near(p, ACCESS_M)) {
+  for (const [s, w] of access) {
     best[s] = t0 + w
     prev[s] = { kind: 'access', walk: w }
   }
@@ -97,9 +148,10 @@ function raptor(net, day, p, t0) {
   return { best, prev }
 }
 
-// Minutes from point p to point q leaving at t0, given a finished raptor()
-function arriveAt(net, r, p, q, t0, egress = net.near(q, ACCESS_M)) {
-  let best = t0 + walkMin(p, q)
+// Minutes to a destination leaving at t0, given a finished raptor(): the
+// better of walking the whole way and riding then walking from an `egress` stop
+function arriveAt(r, walkOnly, egress, t0) {
+  let best = t0 + walkOnly
   let via = -1
   for (const [s, w] of egress) {
     if (r.best[s] + w < best) {
@@ -124,35 +176,39 @@ const SAMPLES = [0, 5, 10, 15, 20, 25, 30]
 
 // (1) Start pin: minutes from `start` to every cell
 export function fromStart(net, day, start, t0) {
-  const p = xy(start)
-  const runs = SAMPLES.map((d) => raptor(net, day, p, t0 + d))
+  const a = anchor(net, start)
+  const walk = walkCells(net, a)
+  const runs = SAMPLES.map((d) => raptor(net, day, stopsNear(net, a), t0 + d))
   return {
-    minutes: net.cells.map((c, i) => median(runs.map((r, k) => arriveAt(net, r, p, c, t0 + SAMPLES[k], net.cellStops[i]).minutes))),
-    walk: net.cells.map((c) => walkMin(p, c)),
+    minutes: net.cells.map((_, i) => median(runs.map((r, k) => arriveAt(r, walk[i], net.cellStops[i], t0 + SAMPLES[k]).minutes))),
+    walk: Array.from(walk),
   }
 }
 
 // (2) End pin: minutes from every cell to `end`. One forward search per cell
 // (the network is tiny), so waiting at the first stop counts the same as in (1).
-const END_SAMPLES = [0, 10, 20, 30]
+// Three samples, not seven: this runs a search per cell, and street walking
+// makes each one a bit heavier; keeps slow phones well under 2 s
+const END_SAMPLES = [0, 15, 30]
 export function toEnd(net, day, end, t0) {
-  const q = xy(end)
-  const egress = net.near(q, ACCESS_M)
+  const b = anchor(net, end)
+  const walk = walkCells(net, b)
+  const egress = stopsNear(net, b)
   return {
-    minutes: net.cells.map((c) =>
-      median(END_SAMPLES.map((d) => arriveAt(net, raptor(net, day, c, t0 + d), c, q, t0 + d, egress).minutes)),
+    minutes: net.cells.map((_, i) =>
+      median(END_SAMPLES.map((d) => arriveAt(raptor(net, day, net.cellStops[i], t0 + d), walk[i], egress, t0 + d).minutes)),
     ),
-    walk: net.cells.map((c) => walkMin(c, q)),
+    walk: Array.from(walk),
   }
 }
 
 // (3) Both pins: the fastest trip leaving at t0, as legs
 export function trip(net, day, start, end, t0) {
-  const p = xy(start)
-  const q = xy(end)
-  const r = raptor(net, day, p, t0)
-  const { minutes, via } = arriveAt(net, r, p, q, t0)
-  const walkOnly = walkMin(p, q)
+  const a = anchor(net, start)
+  const b = anchor(net, end)
+  const walkOnly = walkCells(net, a)[b.cell] + b.snap
+  const r = raptor(net, day, stopsNear(net, a), t0)
+  const { minutes, via } = arriveAt(r, walkOnly, stopsNear(net, b), t0)
   const stopLL = (s) => net.raw.stops[s]
   if (via < 0) return { minutes, walkOnly, legs: [{ kind: 'walk', min: walkOnly, path: [start, end] }] }
 

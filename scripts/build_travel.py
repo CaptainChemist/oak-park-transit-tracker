@@ -6,13 +6,29 @@ time view, small enough to route in the browser in milliseconds.
             pattern = {"r": "CTA:90", "s": [stop index, ...],
                        "t": [[minutes at each stop], ...] one row per trip, sorted}
   cells     [[lat, lon], ...] 100 m grid cell centers inside the Village
+  walk      walking along real streets (OpenStreetMap), as minutes:
+            cellStops  per cell [[stop, min], ...] stops within ACCESS_M
+            cellNbrs   per cell [[cell, min], ...] its 8 neighbors; the browser
+                       walks this small graph from a pin, so the Eisenhower is
+                       crossed only where a street or path actually crosses it
+            transfers  per stop [[stop, min], ...] within TRANSFER_M
 
 Uses the same stops, routes and sample days as scripts/build_service.py.
 
 Usage:
-  python3 scripts/build_travel.py <dir with cta.zip pace.zip metra.zip>
+  python3 scripts/build_travel.py <dir with cta.zip pace.zip metra.zip osm-walk.json>
+
+osm-walk.json: Overpass API result (out skel) for walkable ways around Oak Park:
+  [out:json];way["highway"]["highway"!~"motorway|motorway_link|trunk|trunk_link|
+  construction|proposed|raceway|bus_guideway|platform"]["footway"!~"sidewalk|
+  crossing|traffic_island"]["foot"!~"no|private"]["access"!~"private|no"]
+  ["service"!~"parking_aisle|driveway|drive-through"]
+  (41.848,-87.830,41.926,-87.752);(._;>;);out skel qt;
+Separately mapped sidewalks are left out: the street stands in for them.
 """
+import heapq
 import json
+import math
 import sys
 import zipfile
 from collections import defaultdict
@@ -25,6 +41,156 @@ from build_service import ALIASES, APP_ROUTE, BOUNDARY, DAYS, ROOT, active_servi
 
 OUT = ROOT / "public/data/travel.json"
 CELL_M = 100
+WALK_M_PER_MIN = 78  # 1.3 m/s, about 3 mph
+ACCESS_M = 1200  # longest walk to or from a stop (~15 min)
+TRANSFER_M = 400  # longest walk between stops when transferring
+SNAP_MAX_M = 150  # a point farther than this from any street is left unlinked
+
+
+class Streets:
+    """Walkable OSM ways as a graph in local meters, for shortest walks."""
+
+    def __init__(self, path):
+        els = json.loads(Path(path).read_text())["elements"]
+        pos = {e["id"]: (e["lon"] * M_LON, e["lat"] * M_LAT) for e in els if e["type"] == "node"}
+        self.adj = defaultdict(list)
+        for w in (e for e in els if e["type"] == "way"):
+            for a, b in zip(w["nodes"], w["nodes"][1:]):
+                if a in pos and b in pos:
+                    d = math.dist(pos[a], pos[b])
+                    self.adj[a].append((b, d))
+                    self.adj[b].append((a, d))
+        # Keep only the main connected network. Station platforms on the
+        # embankment otherwise snap to stray path stubs that lead nowhere.
+        main = self._largest_component()
+        self.adj = {n: [(m, d) for m, d in self.adj[n] if m in main] for n in main}
+        self.pos = {n: pos[n] for n in self.adj}
+        # 50 m buckets for nearest-node lookups
+        self.buckets = defaultdict(list)
+        for n, (x, y) in self.pos.items():
+            self.buckets[(int(x // 50), int(y // 50))].append(n)
+
+    def _largest_component(self):
+        seen, best = set(), set()
+        for start in self.adj:
+            if start in seen:
+                continue
+            comp, stack = {start}, [start]
+            while stack:
+                for m, _ in self.adj[stack.pop()]:
+                    if m not in comp:
+                        comp.add(m)
+                        stack.append(m)
+            seen |= comp
+            if len(comp) > len(best):
+                best = comp
+        return best
+
+    def snap(self, x, y):
+        """Nearest street node and the straight-line meters to it."""
+        bx, by = int(x // 50), int(y // 50)
+        best = (None, SNAP_MAX_M)
+        r = math.ceil(SNAP_MAX_M / 50)
+        for i in range(bx - r, bx + r + 1):
+            for j in range(by - r, by + r + 1):
+                for n in self.buckets.get((i, j), ()):
+                    d = math.dist((x, y), self.pos[n])
+                    if d < best[1]:
+                        best = (n, d)
+        return best
+
+    def within(self, src, limit):
+        """Meters along streets from node src to every node within limit."""
+        dist = {src: 0.0}
+        heap = [(0.0, src)]
+        while heap:
+            d, n = heapq.heappop(heap)
+            if d > dist.get(n, math.inf):
+                continue
+            for m, w in self.adj[n]:
+                nd = d + w
+                if nd <= limit and nd < dist.get(m, math.inf):
+                    dist[m] = nd
+                    heapq.heappush(heap, (nd, m))
+        return dist
+
+
+KEEP_PER_PATTERN = 2  # nearest stops kept per route pattern for each cell
+
+
+def walking(streets, cells, stops, stop_patterns):
+    """Street-network walking minutes: cell->stops, cell->8 neighbors, stop->stops.
+
+    stop_patterns: per stop, the ids of the route patterns that serve it. A
+    cell keeps only its nearest few stops on each pattern: walking farther to
+    board the same vehicle never helps, and it keeps the file small."""
+    to_xy = lambda ll: (ll[1] * M_LON, ll[0] * M_LAT)
+    cell_snap = [streets.snap(*to_xy(c)) for c in cells]
+    stop_snap = [streets.snap(*to_xy(s)) for s in stops]
+    stops_at = defaultdict(list)
+    for i, (n, d) in enumerate(stop_snap):
+        if n is not None:
+            stops_at[n].append((i, d))
+    cell_at = defaultdict(list)
+    for i, (n, d) in enumerate(cell_snap):
+        if n is not None:
+            cell_at[n].append((i, d))
+    index = {(round(c[0] * M_LAT / CELL_M), round(c[1] * M_LON / CELL_M)): i for i, c in enumerate(cells)}
+    mins = lambda m: round(m / WALK_M_PER_MIN, 1)
+
+    cell_stops, cell_nbrs = [], []
+    for i, (n, snap_d) in enumerate(cell_snap):
+        if n is None:
+            cell_stops.append([])
+            cell_nbrs.append([])
+            continue
+        dist = streets.within(n, ACCESS_M)
+        found = {}
+        for node, d in dist.items():
+            for s, sd in stops_at.get(node, ()):
+                total = snap_d + d + sd
+                if total <= ACCESS_M and total < found.get(s, math.inf):
+                    found[s] = total
+        by_pattern = defaultdict(list)
+        for s, m in found.items():
+            for p in stop_patterns[s]:
+                by_pattern[p].append((m, s))
+        keep = {s for near in by_pattern.values() for _, s in sorted(near)[:KEEP_PER_PATTERN]}
+        cell_stops.append(sorted([s, mins(found[s])] for s in keep))
+        # Neighbors: street distance between the two cells' snap nodes. Across
+        # the Eisenhower that's the detour to a bridge, not 100 m. Snap gaps
+        # are left out here: added on every hop they'd pile up along a long walk.
+        r, c = round(cells[i][0] * M_LAT / CELL_M), round(cells[i][1] * M_LON / CELL_M)
+        nbrs = []
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                j = index.get((r + dr, c + dc))
+                if j is None or j == i or cell_snap[j][0] is None:
+                    continue
+                d = dist.get(cell_snap[j][0])
+                if d is not None:
+                    nbrs.append([j, mins(d)])
+        cell_nbrs.append(nbrs)
+
+    transfers = []
+    for i, (n, snap_d) in enumerate(stop_snap):
+        out = {}
+        if n is not None:
+            for node, d in streets.within(n, TRANSFER_M).items():
+                for s, sd in stops_at.get(node, ()):
+                    total = snap_d + d + sd
+                    if s != i and total <= TRANSFER_M and total < out.get(s, math.inf):
+                        out[s] = total
+        transfers.append(sorted([s, mins(m)] for s, m in out.items()))
+    unlinked = sum(n is None for n, _ in cell_snap)
+    print(f"walking: {unlinked} cells and {sum(n is None for n, _ in stop_snap)} stops more than {SNAP_MAX_M} m from a street")
+    return {
+        "speed": WALK_M_PER_MIN,
+        "accessM": ACCESS_M,
+        "cellStops": cell_stops,
+        "cellNbrs": cell_nbrs,
+        "transfers": transfers,
+    }
 
 
 def grid():
@@ -95,7 +261,15 @@ def main():
                     days[d].append({"r": route, "s": list(seq), "t": t})
 
     cells = grid()
-    OUT.write_text(json.dumps({"stops": stops, "days": days, "cells": cells, "cellM": CELL_M}, separators=(",", ":")))
+    stop_patterns = [set() for _ in stops]
+    pattern_ids = {}
+    for pats in days.values():
+        for p in pats:
+            pid = pattern_ids.setdefault((p["r"], tuple(p["s"])), len(pattern_ids))
+            for s in p["s"]:
+                stop_patterns[s].add(pid)
+    walk = walking(Streets(src / "osm-walk.json"), cells, stops, stop_patterns)
+    OUT.write_text(json.dumps({"stops": stops, "days": days, "cells": cells, "cellM": CELL_M, "walk": walk}, separators=(",", ":")))
     n = {d: sum(len(p["t"]) for p in ps) for d, ps in days.items()}
     print(f"{len(stops)} stops, {len(cells)} cells, patterns {[len(p) for p in days.values()]}, trips {n}")
     print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB)")

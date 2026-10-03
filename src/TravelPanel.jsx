@@ -174,7 +174,8 @@ export default function TravelPanel({
 
       <p className="muted small route-note">
         An estimate from the {DAYS[day].toLowerCase()} schedule, leaving over the next half hour (the map shows the middle result). Walking is
-        about 3 mph along the street grid and doesn't know where to cross the Eisenhower. Live delays aren't included.
+        about 3 mph along real streets and paths (OpenStreetMap), crossing the Eisenhower only where a street does. Live delays
+        aren't included.
       </p>
     </div>
   )
