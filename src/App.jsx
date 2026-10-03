@@ -4,17 +4,22 @@ import {
   ACCESS,
   BUS_RANGE_M,
   FADE_M,
+  featureRouteKey,
   loadAlerts,
   loadBoundary,
   loadLiveBuses,
   loadRoutes,
+  loadService,
   loadStops,
   metersFromVillage,
   nearVillage,
   PALETTES,
+  stopRouteKeys,
+  vehicleRouteKey,
 } from './data'
 import MapView from './MapView'
 import ProviderGuide from './ProviderGuide'
+import RoutesPanel, { RouteBadge, todayType } from './RoutesPanel'
 import StatusPanel from './StatusPanel'
 import { BUS_SVG, MOON_SVG, SUN_SVG, TRAIN_SVG } from './icons'
 import { addSnapshot, loadTrails } from './trails'
@@ -31,7 +36,8 @@ function liveCount(vehicles) {
 
 const timeOf = (iso) => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
-const TABS = { status: 'Status', providers: 'Providers', about: 'About the data' }
+// "About the data" wrapped to two lines once Routes made four tabs
+const TABS = { status: 'Status', routes: 'Routes', providers: 'Providers', about: 'About' }
 
 const THEME_KEY = 'op-transit-theme'
 
@@ -176,7 +182,13 @@ export default function App() {
   const [buses, setBuses] = useState(null)
   const [showTrails, setShowTrails] = useState(true)
   const [trails, setTrails] = useState(loadTrails)
-  const busesOn = showBuses && (agencies.CTA || agencies.Pace)
+
+  // Route mode: one route's line, stops and live vehicles, plus its schedule in the Routes tab
+  const [service, setService] = useState(null)
+  const [route, setRoute] = useState(null)
+  const [day, setDay] = useState(todayType)
+
+  const busesOn = showBuses && (route || agencies.CTA || agencies.Pace)
 
   useEffect(() => {
     if (!busesOn) return
@@ -203,11 +215,13 @@ export default function App() {
         ? {
             ...buses,
             vehicles: buses.vehicles.filter(
-              (v) => agencies[v.agency] && (!boundary || metersFromVillage(v, boundary) <= busRange),
+              (v) =>
+                (route ? vehicleRouteKey(v) === route : agencies[v.agency]) &&
+                (!boundary || metersFromVillage(v, boundary) <= busRange),
             ),
           }
         : null,
-    [busesOn, buses, agencies, boundary, busRange],
+    [busesOn, buses, agencies, boundary, busRange, route],
   )
 
   useEffect(() => {
@@ -219,16 +233,32 @@ export default function App() {
         setAlertData(a)
       })
       .catch((e) => setError(e.message))
+    // Schedules only feed the Routes tab, so a failure here shouldn't blank the map
+    loadService()
+      .then(setService)
+      .catch(() => setService({ routes: {}, days: {}, firstHour: 4 }))
   }, [])
 
   const visibleStops = useMemo(
-    () => stops.filter((s) => agencies[s.agency] && (!villageOnly || s.nearVillage)),
-    [stops, agencies, villageOnly],
+    () =>
+      stops.filter(
+        (s) => (route ? stopRouteKeys(s).includes(route) : agencies[s.agency]) && (!villageOnly || s.nearVillage),
+      ),
+    [stops, agencies, villageOnly, route],
   )
   const visibleRoutes = useMemo(
-    () => routes && { ...routes, features: routes.features.filter((f) => agencies[f.properties.agency]) },
-    [routes, agencies],
+    () =>
+      routes && {
+        ...routes,
+        features: routes.features.filter((f) => (route ? featureRouteKey(f) === route : agencies[f.properties.agency])),
+      },
+    [routes, agencies, route],
   )
+
+  const pickRoute = (key) => {
+    setRoute(key)
+    if (key) setTab('routes')
+  }
 
   const loading = !error && stops.length === 0
 
@@ -272,7 +302,13 @@ export default function App() {
           <div className="toolbar">
             <div className="chip-group" role="group" aria-label="Providers">
               {Object.keys(agencies).map((a) => (
-                <Chip key={a} pressed={agencies[a]} swatch={palette.agency[a]} onClick={() => setAgencies({ ...agencies, [a]: !agencies[a] })}>
+                <Chip
+                  key={a}
+                  pressed={agencies[a]}
+                  disabled={!!route}
+                  swatch={palette.agency[a]}
+                  onClick={() => setAgencies({ ...agencies, [a]: !agencies[a] })}
+                >
                   {a}
                 </Chip>
               ))}
@@ -315,7 +351,8 @@ export default function App() {
                 fade={villageOnly}
                 alerts={alertData.alerts}
                 colorBy={colorBy}
-                showRoutes={showRoutes}
+                showRoutes={showRoutes || !!route}
+                focusRoute={route}
                 buses={visibleBuses}
                 trails={showTrails && visibleBuses?.live ? trails : null}
                 theme={theme}
@@ -325,6 +362,17 @@ export default function App() {
             {loading && (
               <div className="map-toast" role="status">
                 Loading stops and routes…
+              </div>
+            )}
+            {route && service?.routes[route] && (
+              <div className="route-banner" role="status">
+                <RouteBadge routeKey={route} route={service.routes[route]} palette={palette} />
+                <span>
+                  <b>{service.routes[route].name}</b> only
+                </span>
+                <button type="button" onClick={() => pickRoute(null)}>
+                  Show all routes
+                </button>
               </div>
             )}
             {!error && <MapKey colorBy={colorBy} palette={palette} />}
@@ -357,6 +405,9 @@ export default function App() {
           </nav>
           <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} tabIndex={0} className="tabpanel">
             {tab === 'status' && <StatusPanel alerts={alertData.alerts} fetchedAt={alertData.fetchedAt} />}
+            {tab === 'routes' && (
+              <RoutesPanel service={service} selected={route} onSelect={pickRoute} day={day} setDay={setDay} palette={palette} />
+            )}
             {tab === 'providers' && <ProviderGuide />}
             {tab === 'about' && <AboutData />}
           </div>

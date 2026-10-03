@@ -1056,6 +1056,188 @@ aside {
 
 /* ---------- Motion preferences ---------- */
 
+/* ---------- Route mode ---------- */
+
+.route-badge {
+  min-width: 34px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.route-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.route-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 8px;
+  margin: 0 -8px;
+  width: calc(100% + 16px);
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  transition: background-color 150ms ease-out;
+}
+
+.route-row:hover {
+  background: var(--panel-2);
+}
+
+.route-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 550;
+}
+
+.back-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.route-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+
+.route-title .route-badge {
+  font-size: 0.9375rem;
+  line-height: 28px;
+  padding: 0 9px;
+}
+
+.route-title strong {
+  display: block;
+  font-size: 1.125rem;
+  line-height: 1.25;
+}
+
+.route-title .muted {
+  font-size: 0.8125rem;
+}
+
+.day-picker {
+  margin: 4px 0 6px;
+}
+
+.route-detail .direction {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.route-detail .direction h3 {
+  margin-bottom: 6px;
+}
+
+.span-facts {
+  margin-bottom: 8px;
+}
+
+.span-facts dd {
+  font-variant-numeric: tabular-nums;
+}
+
+.freq-chart {
+  margin: 0 -4px;
+}
+
+.chart-tip {
+  display: grid;
+  gap: 1px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-tip span {
+  color: var(--muted);
+}
+
+.route-note {
+  margin-top: 20px;
+}
+
+.route-banner {
+  position: absolute;
+  z-index: 1000;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 200px);
+  padding: 6px 6px 6px 8px;
+  border-radius: 999px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.route-banner > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.route-banner button {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+}
+
+.route-banner button:hover {
+  border-color: var(--muted);
+}
+
+/* Phones: across the top beside the zoom buttons (the map key owns the bottom);
+   the stop count would sit under it, so it steps aside */
+@media (max-width: 640px) {
+  .route-banner {
+    left: 56px;
+    right: 12px;
+    transform: none;
+    max-width: none;
+  }
+
+  .route-banner > span {
+    flex: 1;
+  }
+
+  .route-banner ~ .stop-count {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

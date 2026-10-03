@@ -78,14 +78,15 @@ function Boundary({ data, fade, palette, theme }) {
   )
 }
 
-const routeStyle = (palette, night) => (feature) => {
+// focus: route mode, where the one route left on the map draws bold
+const routeStyle = (palette, night, focus) => (feature) => {
   const p = feature.properties
   const rail = p.type !== 3 // GTFS route_type 3 = bus
   const railColor = palette.lines[{ G: 'Green', Blue: 'Blue' }[p.route]] ?? (p.agency === 'Metra' ? palette.agency.Metra : p.color)
   return {
     color: rail ? railColor : palette.agency[p.agency],
-    weight: rail ? 5 : 2.5,
-    opacity: rail ? (night ? 0.75 : 0.85) : night ? 0.4 : 0.35,
+    weight: focus ? 6 : rail ? 5 : 2.5,
+    opacity: focus ? 0.9 : rail ? (night ? 0.75 : 0.85) : night ? 0.4 : 0.35,
     lineCap: 'round',
   }
 }
@@ -177,7 +178,7 @@ function Trail({ points, color, now, night, boundary }) {
   })
 }
 
-export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, buses, trails, theme, palette }) {
+export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, focusRoute, buses, trails, theme, palette }) {
   const night = theme === 'night'
   const alertsFor = (stop) =>
     alerts.filter(
@@ -203,7 +204,14 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
         maxNativeZoom={16}
       />
       {boundary && <Boundary data={boundary} fade={fade} palette={palette} theme={theme} />}
-      {showRoutes && routes && <GeoJSON key={`routes-${theme}`} data={routes} style={routeStyle(palette, night)} />}
+      {/* GeoJSON ignores new data, so the key changes whenever the visible set does */}
+      {showRoutes && routes && (
+        <GeoJSON
+          key={`routes-${theme}-${focusRoute ?? 'all'}-${routes.features.length}`}
+          data={routes}
+          style={routeStyle(palette, night, !!focusRoute)}
+        />
+      )}
 
       {/* Own pane so bus stops draw over the Village line (450) but under station/bus icons (600) */}
       <Pane name="stops" style={{ zIndex: 460 }}>

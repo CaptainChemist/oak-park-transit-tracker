@@ -58,6 +58,26 @@ export function stopColor(stop, palette) {
   return palette.agency[stop.agency]
 }
 
+// One key per route across every source, "Agency:Route" (CTA:90, Pace:307,
+// CTA:Green, Metra:UP-W). Rail is named like the live feed and palette.lines.
+const ROUTE_ALIASES = { G: 'Green', 'Green Line': 'Green', 'Blue Line': 'Blue' }
+const routeKey = (agency, route) => `${agency}:${ROUTE_ALIASES[route] ?? route}`
+
+export const stopRouteKeys = (stop) =>
+  stop.routes
+    .split(';')
+    .map((r) => r.trim())
+    .filter(Boolean)
+    .map((r) => routeKey(stop.agency, r))
+export const featureRouteKey = (feature) => routeKey(feature.properties.agency, feature.properties.route)
+export const vehicleRouteKey = (v) => routeKey(v.agency, v.route)
+
+// Same rule as stopColor: rail by line, buses by agency
+export function routeColor(key, palette) {
+  const [agency, route] = key.split(':')
+  return palette.lines[route] ?? palette.agency[agency]
+}
+
 // Rail line names in the stops CSV -> ids used in CTA alerts
 const RAIL_IDS = { 'Green Line': 'G', 'Blue Line': 'Blue' }
 
@@ -85,6 +105,9 @@ export async function loadStops() {
 export const loadRoutes = () => getJson('data/routes.geojson')
 
 export const loadBoundary = () => getJson('data/boundary.geojson')
+
+// First/last trip and trips per hour at Village stops (scripts/build_service.py)
+export const loadService = () => getJson('data/route-service.json')
 
 const BUS_PROXY = import.meta.env.VITE_BUS_PROXY_URL
 
