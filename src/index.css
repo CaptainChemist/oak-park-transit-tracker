@@ -80,3 +80,9 @@ aside { border-left: 1px solid var(--border); background: var(--panel); overflow
   .map { height: 60vh; flex: none; }
   aside { border-left: 0; border-top: 1px solid var(--border); }
 }
+
+.bus { display: inline-flex; align-items: center; gap: 2px; background: #00539f; color: #fff; font: 600 11px/1 system-ui, sans-serif; padding: 3px 6px 3px 4px; border-radius: 11px; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); white-space: nowrap; }
+.bus-arrow { display: inline-block; font-size: 9px; }
+.bus-stale { background: #9ca3af; }
+.legend .live { color: #15803d; font-weight: 600; }
+.legend .stale { color: var(--warn); font-weight: 600; }

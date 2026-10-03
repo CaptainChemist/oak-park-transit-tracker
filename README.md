@@ -46,6 +46,18 @@ Add an object to `src/content/notices.json`:
 
 After you check a row against the provider's page, set `"verified": true` and `"checkedOn": "2026-10-03"` in `providers.json`. Until then the card shows an "unverified" tag.
 
+## Live Pace buses
+
+Pace has no official real-time API. `worker/` is a Cloudflare Worker that calls the undocumented JSON behind Pace's [Bus Tracker](https://tmweb.pacebus.com/TMWebWatch/) for the 7 Oak Park routes, adds CORS headers, and caches for 20 seconds. If it's down, the map shows a saved sample in gray, labeled as not live.
+
+```bash
+cd worker && npm install
+npx wrangler dev      # local, at http://localhost:8787/vehicles
+npx wrangler deploy   # needs `npx wrangler login` first
+```
+
+After deploying, set the repo variable `PACE_PROXY_URL` to the worker URL (no trailing slash) and re-run the Pages deploy.
+
 ## Data and limits
 
 - Stops come from the Day in Our Data snapshot (`transit-stops-oak-park.csv`), not a live schedule.

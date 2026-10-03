@@ -47,6 +47,22 @@ export async function loadStops() {
 
 export const loadRoutes = () => getJson('data/routes.geojson')
 
+const PACE_PROXY = import.meta.env.VITE_PACE_PROXY_URL
+
+// Live Pace buses from the Cloudflare Worker. Falls back to a saved sample,
+// clearly flagged, if the proxy or Pace is down.
+export async function loadPaceVehicles() {
+  try {
+    if (!PACE_PROXY) throw new Error('No proxy configured')
+    const res = await fetch(`${PACE_PROXY}/vehicles`)
+    if (!res.ok) throw new Error(`Proxy ${res.status}`)
+    return { ...(await res.json()), live: true }
+  } catch (e) {
+    const sample = await getJson('data/pace-vehicles-sample.json')
+    return { ...sample, live: false, error: e.message }
+  }
+}
+
 export async function loadAlerts() {
   try {
     return await getJson('data/alerts.json')

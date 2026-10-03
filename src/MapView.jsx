@@ -1,7 +1,19 @@
-import { CircleMarker, GeoJSON, MapContainer, Popup, TileLayer } from 'react-leaflet'
+import L from 'leaflet'
+import { CircleMarker, GeoJSON, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import { ACCESS, AGENCY_COLORS, accessOf, routeIds } from './data'
 
 const CENTER = [41.8875, -87.7915]
+
+function busIcon(v, live) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="bus ${live ? '' : 'bus-stale'}">
+      <span class="bus-arrow" style="transform: rotate(${v.heading}deg)">▲</span>${v.route}
+    </div>`,
+    iconSize: [44, 22],
+    iconAnchor: [22, 11],
+  })
+}
 
 function routeStyle(feature) {
   const p = feature.properties
@@ -49,7 +61,7 @@ function StopPopup({ stop, alerts }) {
   )
 }
 
-export default function MapView({ stops, routes, alerts, colorBy, showRoutes }) {
+export default function MapView({ stops, routes, alerts, colorBy, showRoutes, pace }) {
   const alertsFor = (stop) =>
     alerts.filter(
       (a) => a.stationIds.includes(stop.stop_id) || (stop.agency === 'CTA' && a.routes.some((r) => routeIds(stop).includes(r))),
@@ -84,6 +96,19 @@ export default function MapView({ stops, routes, alerts, colorBy, showRoutes }) 
           </CircleMarker>
         )
       })}
+      {pace?.vehicles.map((v) => (
+        <Marker key={v.id} position={[v.lat, v.lon]} icon={busIcon(v, pace.live)} zIndexOffset={1000}>
+          <Popup>
+            <div className="popup">
+              <strong>Pace {v.route} {v.routeName}</strong>
+              <div>Bus #{v.id}</div>
+              <div className="muted">
+                {pace.live ? 'Live position' : 'Saved sample, not live'} as of {new Date(pace.fetchedAt).toLocaleTimeString()}
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   )
 }

@@ -1,0 +1,214 @@
+{
+ "fetchedAt": "2026-10-03T17:02:28.573Z",
+ "vehicles": [
+  {
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.78623,
+   "lon": -87.80141,
+   "heading": 180,
+   "id": "6376"
+  },
+  {
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.92291,
+   "lon": -87.80622,
+   "heading": 0,
+   "id": "20407"
+  },
+  {
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.87212,
+   "lon": -87.80441,
+   "heading": 0,
+   "id": "20468"
+  },
+  {
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.90521,
+   "lon": -87.80576,
+   "heading": 180,
+   "id": "20436"
+  },
+  {
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.76343,
+   "lon": -87.80201,
+   "heading": 90,
+   "id": "20418"
+  },
+  {
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.856,
+   "lon": -87.80406,
+   "heading": 180,
+   "id": "20471"
+  },
+  {
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.83016,
+   "lon": -87.80286,
+   "heading": 0,
+   "id": "20403"
+  },
+  {
+   "route": "309",
+   "routeName": "Lake Street",
+   "lat": 41.88867,
+   "lon": -87.79777,
+   "heading": 90,
+   "id": "6357"
+  },
+  {
+   "route": "309",
+   "routeName": "Lake Street",
+   "lat": 41.90229,
+   "lon": -87.94002,
+   "heading": 180,
+   "id": "20456"
+  },
+  {
+   "route": "311",
+   "routeName": "Oak Park Avenue",
+   "lat": 41.85599,
+   "lon": -87.79349,
+   "heading": 0,
+   "id": "20409"
+  },
+  {
+   "route": "311",
+   "routeName": "Oak Park Avenue",
+   "lat": 41.8389,
+   "lon": -87.7931,
+   "heading": 180,
+   "id": "20454"
+  },
+  {
+   "route": "313",
+   "routeName": "St. Charles Road",
+   "lat": 41.83161,
+   "lon": -88.02464,
+   "heading": 270,
+   "id": "20485"
+  },
+  {
+   "route": "313",
+   "routeName": "St. Charles Road",
+   "lat": 41.88877,
+   "lon": -87.83396,
+   "heading": 270,
+   "id": "20446"
+  },
+  {
+   "route": "313",
+   "routeName": "St. Charles Road",
+   "lat": 41.89432,
+   "lon": -87.86109,
+   "heading": 90,
+   "id": "20448"
+  },
+  {
+   "route": "314",
+   "routeName": "Ridgeland Avenue",
+   "lat": 41.83555,
+   "lon": -87.78312,
+   "heading": 0,
+   "id": "20417"
+  },
+  {
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.7944,
+   "lon": -87.74281,
+   "heading": 90,
+   "id": "6366"
+  },
+  {
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.83363,
+   "lon": -87.77333,
+   "heading": 180,
+   "id": "6355"
+  },
+  {
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.81729,
+   "lon": -87.76297,
+   "heading": 0,
+   "id": "20424"
+  },
+  {
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.87291,
+   "lon": -87.77454,
+   "heading": 180,
+   "id": "20453"
+  },
+  {
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.88791,
+   "lon": -87.7741,
+   "heading": 90,
+   "id": "20467"
+  },
+  {
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.78481,
+   "lon": -87.74008,
+   "heading": 180,
+   "id": "20451"
+  },
+  {
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.90795,
+   "lon": -87.85311,
+   "heading": 90,
+   "id": "6361"
+  },
+  {
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.87449,
+   "lon": -87.81547,
+   "heading": 90,
+   "id": "20404"
+  },
+  {
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.90841,
+   "lon": -87.83971,
+   "heading": 270,
+   "id": "20415"
+  },
+  {
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.87967,
+   "lon": -87.80496,
+   "heading": 90,
+   "id": "20429"
+  },
+  {
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.90829,
+   "lon": -87.83806,
+   "heading": 90,
+   "id": "20474"
+  }
+ ],
+ "errors": []
+}

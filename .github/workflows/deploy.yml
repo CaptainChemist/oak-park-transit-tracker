@@ -32,6 +32,9 @@ jobs:
       - run: python3 scripts/fetch_alerts.py || echo "alerts fetch failed, using committed copy"
       - run: npm ci
       - run: npm run build
+        env:
+          # Set in repo Settings > Variables after deploying worker/ to Cloudflare
+          VITE_PACE_PROXY_URL: ${{ vars.PACE_PROXY_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
