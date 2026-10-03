@@ -190,7 +190,8 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
               radius={4.5}
               pathOptions={{ color: palette.ring, weight: 1.5, fillColor: fillFor(s), fillOpacity: 0.95 }}
             >
-              <Popup>
+              {/* Popups inherit the surrounding Pane; put this one back on top (700) */}
+              <Popup pane="popupPane">
                 <StopPopup stop={s} alerts={alertsFor(s)} palette={palette} />
               </Popup>
             </CircleMarker>
