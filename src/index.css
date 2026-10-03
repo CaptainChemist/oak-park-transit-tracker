@@ -1181,6 +1181,58 @@ aside {
   margin-top: 20px;
 }
 
+.fare {
+  display: grid;
+  gap: 2px;
+  font-size: 0.875rem;
+}
+
+.popup .fare {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8125rem;
+}
+
+.fare-main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+
+.fare-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.popup .fare-amount {
+  font-size: 1.0625rem;
+}
+
+.fare-source {
+  justify-self: start;
+  margin-top: 2px;
+}
+
+.popup-action {
+  width: 100%;
+  min-height: 32px;
+  margin-top: 10px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+}
+
+.popup-action:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
 .route-banner {
   position: absolute;
   z-index: 1000;

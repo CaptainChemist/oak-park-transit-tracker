@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { routeColor } from './data'
+import Fare from './Fare'
 import { every, hourRange } from './hours'
 
 // Recharts is big; only load it once someone opens a route
@@ -61,7 +62,15 @@ function RouteDetail({ routeKey, route, service, day, setDay, palette, onClear }
       </div>
       <p className="muted small">The map shows only this route, its stops and its live {units}.</p>
 
-      <DayPicker day={day} setDay={setDay} />
+      <section className="direction">
+        <h3>Fare</h3>
+        <Fare agency={route.agency} rail={isRail(route)} />
+      </section>
+
+      <section className="direction">
+        <h3>When it runs</h3>
+        <DayPicker day={day} setDay={setDay} />
+      </section>
 
       {dirs.length === 0 ? (
         <p className="empty">No {DAYS[day].toLowerCase()} service.</p>

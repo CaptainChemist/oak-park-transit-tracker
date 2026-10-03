@@ -353,6 +353,7 @@ export default function App() {
                 colorBy={colorBy}
                 showRoutes={showRoutes || !!route}
                 focusRoute={route}
+                onShowRoute={pickRoute}
                 buses={visibleBuses}
                 trails={showTrails && visibleBuses?.live ? trails : null}
                 theme={theme}

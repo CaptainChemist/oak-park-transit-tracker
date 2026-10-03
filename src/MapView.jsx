@@ -1,7 +1,8 @@
 import L from 'leaflet'
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
-import { ACCESS, accessOf, BUS_RANGE_M, metersFromVillage, routeIds, stopColor } from './data'
+import { ACCESS, accessOf, BUS_RANGE_M, metersFromVillage, routeIds, stopColor, vehicleRouteKey } from './data'
 import Arrivals from './Arrivals'
+import Fare from './Fare'
 import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES, vehicleKey } from './trails'
 
@@ -178,7 +179,7 @@ function Trail({ points, color, now, night, boundary }) {
   })
 }
 
-export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, focusRoute, buses, trails, theme, palette }) {
+export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, focusRoute, onShowRoute, buses, trails, theme, palette }) {
   const night = theme === 'night'
   const alertsFor = (stop) =>
     alerts.filter(
@@ -283,6 +284,12 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
               <div className="muted">
                 {buses.live ? 'Live position' : 'Saved sample, not live'} as of {new Date(buses.fetchedAt).toLocaleTimeString()}
               </div>
+              <Fare agency={v.agency} rail={v.mode === 'train'} compact />
+              {onShowRoute && focusRoute !== vehicleRouteKey(v) && (
+                <button type="button" className="popup-action" onClick={() => onShowRoute(vehicleRouteKey(v))}>
+                  Show the {v.mode === 'train' ? `${v.route} Line` : `${v.route} route`} only
+                </button>
+              )}
             </div>
           </Popup>
         </Marker>
