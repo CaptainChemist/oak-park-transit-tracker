@@ -105,7 +105,7 @@ export async function loadLiveBuses() {
 // Stops across Harlem/Austin sit within ~85 m of the Village line; the next
 // closest (Lake and Madison in River Forest/Forest Park) are 150 m+ out.
 const ACROSS_STREET_M = 100
-export const BUS_RANGE_M = 402 // live buses: 1/4 mile, same as the fade for now but tuned separately
+export const BUS_RANGE_M = 402 // 1/4 mile: live vehicles and their trails; route lines use the same cut (CLIP_M in scripts/build_routes.py)
 export const FADE_M = 402 // 1/4 mile; matches FADE_M in scripts/build_boundary.py
 
 const villageRings = (boundary) => boundary.features.find((f) => f.properties.kind === 'village').geometry.coordinates

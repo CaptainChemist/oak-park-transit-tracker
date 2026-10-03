@@ -1,6 +1,6 @@
 import L from 'leaflet'
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
-import { ACCESS, accessOf, routeIds, stopColor } from './data'
+import { ACCESS, accessOf, BUS_RANGE_M, metersFromVillage, routeIds, stopColor } from './data'
 import Arrivals from './Arrivals'
 import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES, vehicleKey } from './trails'
@@ -131,12 +131,33 @@ function StopPopup({ stop, alerts, palette }) {
 
 // One segment per hop so older parts of the trail fade out. At night each hop
 // also gets a wide, faint underlay so the trail glows against the dark map.
-function Trail({ points, color, now, night }) {
+// Trim a trail hop to the part within BUS_RANGE_M (1/4 mile) of the Village,
+// the same limit as route lines and live vehicles. Returns null if none of it is.
+function clipHop(a, b, boundary) {
+  if (!boundary) return [a, b]
+  const near = (p) => metersFromVillage(p, boundary) <= BUS_RANGE_M
+  const aIn = near(a)
+  const bIn = near(b)
+  if (aIn && bIn) return [a, b]
+  if (!aIn && !bIn) return null
+  // Binary search along the hop for where it crosses the limit
+  let inP = aIn ? a : b
+  let outP = aIn ? b : a
+  for (let i = 0; i < 12; i++) {
+    const mid = { lat: (inP.lat + outP.lat) / 2, lon: (inP.lon + outP.lon) / 2 }
+    if (near(mid)) inP = mid
+    else outP = mid
+  }
+  return aIn ? [a, inP] : [inP, b]
+}
+
+function Trail({ points, color, now, night, boundary }) {
   const maxAge = TRAIL_MINUTES * 60_000
   return points.slice(1).flatMap((p, i) => {
-    const prev = points[i]
+    const hop = clipHop(points[i], p, boundary)
+    if (!hop) return []
     const fresh = Math.max(0, 1 - (now - p.t) / maxAge)
-    const positions = [[prev.lat, prev.lon], [p.lat, p.lon]]
+    const positions = hop.map((q) => [q.lat, q.lon])
     const line = (
       <Polyline
         key={p.t}
@@ -211,7 +232,7 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
             const key = vehicleKey(v)
             return (
               trails[key]?.length > 1 && (
-                <Trail key={`trail-${key}-${theme}`} points={trails[key]} color={vehicleColor(v, palette)} now={now} night={night} />
+                <Trail key={`trail-${key}-${theme}`} points={trails[key]} color={vehicleColor(v, palette)} now={now} night={night} boundary={boundary} />
               )
             )
           })}
