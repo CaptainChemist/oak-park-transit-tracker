@@ -1399,3 +1399,9 @@ aside {
   font-size: 0.8125rem;
   color: var(--muted);
 }
+
+.route-metra {
+  background: #d97706;
+  border-color: #d97706;
+  color: #1a1d22;
+}

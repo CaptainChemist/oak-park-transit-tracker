@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadArrivals } from './data'
+import { loadMetraSchedule, nextDepartures } from './metra'
 
 const REFRESH_MS = 30000
 const PER_DIRECTION = 3
@@ -28,9 +29,69 @@ function Time({ a }) {
   )
 }
 
-// Live CTA arrivals for a stop popup. Mounts when the popup opens and
-// refreshes while it stays open.
+// Scheduled departures at the Oak Park Metra station; recomputed every 30 s
+function MetraDepartures() {
+  const [state, setState] = useState({ status: 'loading' })
+
+  useEffect(() => {
+    let cancelled = false
+    let id
+    loadMetraSchedule()
+      .then((data) => {
+        const tick = () => !cancelled && setState({ status: 'ok', byDir: nextDepartures(data) })
+        tick()
+        id = setInterval(tick, REFRESH_MS)
+      })
+      .catch(() => !cancelled && setState({ status: 'error' }))
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
+
+  if (state.status === 'loading') return <p className="arrivals-note">Checking the schedule…</p>
+  if (state.status === 'error') return <p className="arrivals-note">The Metra schedule isn't available right now.</p>
+
+  const rows = [
+    [1, 'toward Chicago'],
+    [0, 'toward Elburn'],
+  ].filter(([dir]) => state.byDir[dir].length)
+  return (
+    <div className="arrivals">
+      <b className="arrivals-title">Next scheduled departures</b>
+      {rows.length === 0 ? (
+        <p className="arrivals-note">No more trains scheduled today.</p>
+      ) : (
+        <ul>
+          {rows.map(([dir, label]) => (
+            <li key={dir}>
+              <span className="route-tag route-metra">UP-W</span>
+              <span className="arrivals-dir">{label}</span>
+              <span className="arrivals-times">
+                {state.byDir[dir].map((d, i) => (
+                  <span key={i} className={`eta ${d.minutesAway <= 1 ? 'is-due' : ''}`} title={`To ${d.headsign}`}>
+                    {d.minutesAway < 60 ? (d.minutesAway <= 1 ? 'Due' : `${d.minutesAway} min`) : d.clock}
+                  </span>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="arrivals-foot">From Metra's published schedule, not tracked live</p>
+    </div>
+  )
+}
+
+// Next arrivals for a stop popup: live for CTA, scheduled for Metra. Mounts
+// when the popup opens and refreshes while it stays open.
 export default function Arrivals({ stop }) {
+  if (stop.agency === 'Metra') return <MetraDepartures />
+  if (stop.agency !== 'CTA') return <p className="arrivals-note">Live arrivals aren't available for {stop.agency} stops yet.</p>
+  return <CtaArrivals stop={stop} />
+}
+
+function CtaArrivals({ stop }) {
   const [state, setState] = useState({ status: 'loading' })
 
   useEffect(() => {
@@ -47,9 +108,6 @@ export default function Arrivals({ stop }) {
     }
   }, [stop])
 
-  if (stop.agency !== 'CTA') {
-    return <p className="arrivals-note">Live arrivals aren't available for {stop.agency} stops yet.</p>
-  }
   if (state.status === 'loading') return <p className="arrivals-note">Checking next arrivals…</p>
   if (state.status === 'error') return <p className="arrivals-note">Arrival times aren't available right now.</p>
 

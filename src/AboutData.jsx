@@ -65,7 +65,7 @@ export default function AboutData() {
         </li>
         <li>Route hours come from one sample weekday, Saturday and Sunday. Holidays and schedule changes aren't reflected.</li>
         <li>Pace stop accessibility isn't recorded. "Unknown" doesn't mean inaccessible.</li>
-        <li>Arrival times are only for CTA. Pace and Metra stops don't show them yet.</li>
+        <li>Arrival times are live for CTA only. The Oak Park Metra station shows scheduled departures, and Pace stops don't show times yet.</li>
         <li>Metra trains aren't shown live, and Pace and Metra alerts aren't included.</li>
         <li>This page doesn't have rider eligibility rules yet.</li>
       </ul>
