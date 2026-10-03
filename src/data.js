@@ -15,11 +15,13 @@ export const ACCESS = {
   unknown: { label: 'Unknown', color: '#6B7280' },
 }
 
-// Map colors per theme. Night lifts every hue so lines and markers read on the
-// dark basemap; day keeps the agencies' own brand colors.
+// Map colors per theme. Rail is colored by line (Green, Blue, Metra) everywhere;
+// buses get one quiet color per agency (CTA charcoal like CTA's own maps, Pace
+// purple) so no bus color competes with a rail line. Night lifts every hue so
+// it reads on the dark basemap.
 export const PALETTES = {
   day: {
-    agency: AGENCY_COLORS,
+    agency: { CTA: '#3F4650', Pace: '#6B3FA0', Metra: '#D97706' },
     lines: { Green: '#00843D', Blue: '#0079B8' }, // darker than CTA brand so white labels pass contrast
     access: { yes: '#15803D', no: '#B91C1C', unknown: '#6B7280' },
     stale: '#9CA3AF',
@@ -29,7 +31,7 @@ export const PALETTES = {
     tiles: 'Light',
   },
   night: {
-    agency: { CTA: '#FF5C70', Pace: '#5AA2FF', Metra: '#F7B23B' },
+    agency: { CTA: '#C3CAD4', Pace: '#B99CFF', Metra: '#F7B23B' },
     lines: { Green: '#3DDC84', Blue: '#4CC9F0' },
     access: { yes: '#4ADE80', no: '#F87171', unknown: '#9CA3AF' },
     stale: '#6B7280',
@@ -44,6 +46,16 @@ export function accessOf(stop) {
   if (stop.wheelchair_boarding === '1') return 'yes'
   if (stop.wheelchair_boarding === '2') return 'no'
   return 'unknown'
+}
+
+// Color for a stop: rail stations take their line's color, bus stops their agency's
+export function stopColor(stop, palette) {
+  if (stop.stop_type === 'rail_station') {
+    if (stop.agency === 'Metra') return palette.agency.Metra
+    const line = stop.routes.includes('Green') ? 'Green' : stop.routes.includes('Blue') ? 'Blue' : null
+    if (line) return palette.lines[line]
+  }
+  return palette.agency[stop.agency]
 }
 
 // Rail line names in the stops CSV -> ids used in CTA alerts

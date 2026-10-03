@@ -53,7 +53,7 @@ function Logo() {
       <rect width="32" height="32" rx="8" fill="var(--logo-bg)" />
       <path d="M6 12h20" stroke="#3DDC84" strokeWidth="3" strokeLinecap="round" />
       <path d="M6 20h20" stroke="#4CC9F0" strokeWidth="3" strokeLinecap="round" />
-      <path d="M16 6v20" stroke="#FF5C70" strokeWidth="3" strokeLinecap="round" />
+      <path d="M16 6v20" stroke="#B99CFF" strokeWidth="3" strokeLinecap="round" />
       <circle cx="16" cy="12" r="2.6" fill="#fff" />
       <circle cx="16" cy="20" r="2.6" fill="#fff" />
     </svg>
@@ -91,12 +91,26 @@ function Chip({ pressed, onClick, disabled, swatch, children }) {
 }
 
 function MapKey({ colorBy, palette }) {
+  const lines = [
+    ['Green Line', palette.lines.Green],
+    ['Blue Line', palette.lines.Blue],
+    ['Metra UP-W', palette.agency.Metra],
+    ['CTA bus', palette.agency.CTA],
+    ['Pace bus', palette.agency.Pace],
+  ]
   // Open on wide screens; folded on phones so it doesn't cover the map
   const [open] = useState(() => window.matchMedia('(min-width: 861px)').matches)
   return (
     <details className="map-key" open={open}>
       <summary>Map key</summary>
       <ul>
+        {colorBy === 'agency' &&
+          lines.map(([label, color]) => (
+            <li key={label}>
+              <i className="key-line" style={{ background: color }} />
+              {label}
+            </li>
+          ))}
         {colorBy === 'access' &&
           Object.entries(ACCESS).map(([k, a]) => (
             <li key={k}>
@@ -104,7 +118,7 @@ function MapKey({ colorBy, palette }) {
               {a.label}
             </li>
           ))}
-        <li>
+        <li className="key-divider">
           <i className="key-dot" />
           Bus stop
         </li>

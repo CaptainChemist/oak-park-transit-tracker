@@ -1,6 +1,6 @@
 import L from 'leaflet'
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
-import { ACCESS, accessOf, routeIds } from './data'
+import { ACCESS, accessOf, routeIds, stopColor } from './data'
 import Arrivals from './Arrivals'
 import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES, vehicleKey } from './trails'
@@ -97,7 +97,7 @@ function StopPopup({ stop, alerts, palette }) {
     <div className="popup">
       <strong>{stop.stop_name}</strong>
       <div className="popup-agency">
-        <i className="swatch" style={{ background: palette.agency[stop.agency] }} />
+        <i className="swatch" style={{ background: stopColor(stop, palette) }} />
         {stop.agency} {stop.stop_type === 'rail_station' ? 'station' : 'bus stop'}
         {stop.in_oak_park === 'N' && ' · just outside the Village'}
       </div>
@@ -163,7 +163,7 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
       (a) => a.stationIds.includes(stop.stop_id) || (stop.agency === 'CTA' && a.routes.some((r) => routeIds(stop).includes(r))),
     )
   const now = Date.now()
-  const fillFor = (s) => (colorBy === 'access' ? palette.access[accessOf(s)] : palette.agency[s.agency])
+  const fillFor = (s) => (colorBy === 'access' ? palette.access[accessOf(s)] : stopColor(s, palette))
 
   return (
     <MapContainer center={CENTER} zoom={14} className="map" scrollWheelZoom preferCanvas>

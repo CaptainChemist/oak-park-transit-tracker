@@ -467,11 +467,24 @@ main {
 }
 
 .key-dot,
+.key-line,
 .key-ring,
 .key-boundary,
 .key-station,
 .key-vehicle {
   flex: none;
+}
+
+.key-line {
+  width: 18px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.map-key li.key-divider {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 
 .key-dot {
