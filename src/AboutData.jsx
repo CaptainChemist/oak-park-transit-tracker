@@ -37,6 +37,10 @@ export default function AboutData() {
       <h3>How the map works</h3>
       <ul>
         <li>Live buses and trains update about every 30 seconds. Trails show where each one went in the last 15 minutes.</li>
+        <li>
+          Click a CTA station or bus stop to see the next arrivals in each direction. Times marked * come from the schedule
+          because CTA isn't tracking that train live.
+        </li>
         <li>Only buses and trains within 1/4 mile of the Village line are shown.</li>
         <li>If the live feed is down, the map shows a saved sample in gray and says it isn't live.</li>
         <li>
@@ -49,7 +53,7 @@ export default function AboutData() {
         <li>The stops file is a snapshot, not a live schedule.</li>
         <li>Trip counts are for one weekday (September 9, 2026). They don't tell you how often a bus comes or what runs on Saturdays.</li>
         <li>Pace stop accessibility isn't recorded. "Unknown" doesn't mean inaccessible.</li>
-        <li>The map shows where buses and trains are, not when they'll reach your stop.</li>
+        <li>Arrival times are only for CTA. Pace and Metra stops don't show them yet.</li>
         <li>Metra trains aren't shown live, and Pace and Metra alerts aren't included.</li>
         <li>This page doesn't have span of service or rider eligibility rules yet.</li>
       </ul>
