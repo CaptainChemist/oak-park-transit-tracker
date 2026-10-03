@@ -140,6 +140,15 @@ export function nearVillage(stop, boundary) {
   return boundary ? metersToBoundary(stop, boundary) <= ACROSS_STREET_M : false
 }
 
+// Next arrivals at a CTA rail station (mapid) or bus stop, via the worker
+export async function loadArrivals(stop) {
+  if (!BUS_PROXY) throw new Error('No proxy configured')
+  const type = stop.stop_type === 'rail_station' ? 'train' : 'bus'
+  const res = await fetch(`${BUS_PROXY}/arrivals?type=${type}&id=${encodeURIComponent(stop.stop_id)}`)
+  if (!res.ok) throw new Error(`Arrivals ${res.status}`)
+  return res.json()
+}
+
 export async function loadAlerts() {
   try {
     return await getJson('data/alerts.json')

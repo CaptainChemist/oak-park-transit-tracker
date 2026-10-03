@@ -1138,3 +1138,68 @@ aside {
     padding: 0 12px;
   }
 }
+
+/* ---------- Arrivals in stop popups ---------- */
+
+.arrivals {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.arrivals-title {
+  font-size: 0.8125rem;
+}
+
+.arrivals ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arrivals li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 8px;
+}
+
+.arrivals-dir {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.arrivals-times {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.eta.is-due {
+  color: var(--live);
+}
+
+.eta sup {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.eta-delayed {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.arrivals-note,
+.arrivals-foot {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}

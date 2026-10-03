@@ -1,10 +1,14 @@
 import L from 'leaflet'
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { ACCESS, accessOf, routeIds } from './data'
+import Arrivals from './Arrivals'
 import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES, vehicleKey } from './trails'
 
 const CENTER = [41.8875, -87.7915]
+
+// Stop popups grow with arrivals and alerts; scroll instead of overflowing the map on phones
+const STOP_POPUP_MAX_H = 340
 
 const vehicleColor = (v, palette) => (v.mode === 'train' ? palette.lines[v.route] : palette.agency[v.agency])
 
@@ -110,6 +114,7 @@ function StopPopup({ stop, alerts, palette }) {
           {stop.weekday_trips} trips on {stop.weekday_date} (one weekday, not a headway)
         </div>
       )}
+      <Arrivals stop={stop} />
       {alerts.length > 0 && (
         <div className="popup-alerts">
           <b>{alerts.length} active alert{alerts.length > 1 ? 's' : ''}</b>
@@ -221,7 +226,7 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
             icon={stationIcon(fillFor(s), alerts.some((a) => a.stationIds.includes(s.stop_id)))}
             zIndexOffset={500}
           >
-            <Popup>
+            <Popup maxHeight={STOP_POPUP_MAX_H}>
               <StopPopup stop={s} alerts={alertsFor(s)} palette={palette} />
             </Popup>
           </Marker>

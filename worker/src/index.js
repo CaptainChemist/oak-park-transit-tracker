@@ -1,6 +1,8 @@
 // Cloudflare Worker: CORS proxy for live bus and train positions on Oak Park routes.
 //
 // GET /vehicles -> { fetchedAt, vehicles: [{ agency, mode, route, routeName, lat, lon, heading, id }], errors }
+// GET /arrivals?type=train|bus&id=<CTA station mapid or bus stop id>
+//   -> { fetchedAt, arrivals: [{ route, direction, destination, minutes, approaching, scheduled, delayed }] }
 //
 // Pace has no official real-time API. This calls the undocumented JSON behind
 // the TMWebWatch live map, so it may break without notice.
@@ -19,6 +21,9 @@ const CTA_ROUTES = ['20', '66', '70', '86', '90', '91', '126'] // max 10 per req
 
 const CTA_TRAINS = 'https://lapi.transitchicago.com/api/1.0/ttpositions.aspx'
 const TRAIN_LINES = { g: 'Green', blue: 'Blue' }
+
+const CTA_TRAIN_ARRIVALS = 'https://lapi.transitchicago.com/api/1.0/ttarrivals.aspx'
+const CTA_BUS_PREDICTIONS = 'https://www.ctabustracker.com/bustime/api/v2/getpredictions'
 
 const ALLOWED_ORIGINS = [
   'https://captainchemist.github.io',
@@ -115,10 +120,87 @@ async function vehicles(env) {
   return { fetchedAt: new Date().toISOString(), vehicles: ok, errors }
 }
 
+// CTA times are Chicago wall-clock strings with no zone; parse both sides the
+// same way so the difference is right regardless of the Worker's time zone.
+const wall = (s) => Date.parse(s.replace(' ', 'T').replace(/^(\d{4})(\d{2})(\d{2})T/, '$1-$2-$3T') + 'Z')
+
+async function trainArrivals(key, mapid) {
+  if (!key) throw new Error('CTA trains: no CTA_TRAIN_KEY secret')
+  const res = await fetch(`${CTA_TRAIN_ARRIVALS}?key=${encodeURIComponent(key)}&mapid=${mapid}&max=12&outputType=JSON`)
+  if (!res.ok) throw new Error(`CTA trains: ${res.status}`)
+  const body = (await res.json()).ctatt || {}
+  if (body.errCd && body.errCd !== '0') throw new Error(`CTA trains: ${body.errNm}`)
+  const now = wall(body.tmst)
+  return (body.eta || [])
+    .filter((e) => !/terminal arrival/i.test(e.stpDe)) // trains ending here aren't boardable
+    .map((e) => ({
+      route: TRAIN_LINES[{ G: 'g', Blue: 'blue' }[e.rt]] || e.rt,
+      direction: e.stpDe.replace(/^Service /, ''),
+      destination: e.destNm,
+      minutes: Math.max(0, Math.round((wall(e.arrT) - now) / 60000)),
+      approaching: e.isApp === '1',
+      scheduled: e.isSch === '1',
+      delayed: e.isDly === '1',
+    }))
+}
+
+async function busArrivals(key, stpid) {
+  if (!key) throw new Error('CTA buses: no CTA_BUS_KEY secret')
+  const res = await fetch(`${CTA_BUS_PREDICTIONS}?key=${encodeURIComponent(key)}&stpid=${stpid}&top=12&format=json`)
+  if (!res.ok) throw new Error(`CTA buses: ${res.status}`)
+  const body = (await res.json())['bustime-response'] || {}
+  const fatal = (body.error || []).filter((e) => !/no (arrival|service|data)/i.test(e.msg))
+  if (!body.prd && fatal.length) throw new Error(`CTA buses: ${fatal.map((e) => e.msg).join('; ')}`)
+  return (body.prd || []).map((p) => ({
+    route: p.rt,
+    direction: p.rtdir,
+    destination: p.des,
+    minutes: p.prdctdn === 'DUE' ? 0 : Number(p.prdctdn) || 0,
+    approaching: p.prdctdn === 'DUE',
+    scheduled: false,
+    delayed: p.dly,
+  }))
+}
+
+// Cache a JSON response for everyone for `seconds`, keyed by `cacheUrl`
+async function cachedJson(ctx, cacheUrl, seconds, build) {
+  const cache = caches.default
+  const key = new Request(cacheUrl)
+  let res = await cache.match(key)
+  if (!res) {
+    res = new Response(JSON.stringify(await build()), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${seconds}` },
+    })
+    ctx.waitUntil(cache.put(key, res.clone()))
+  }
+  return res
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors(request) })
+
+    if (url.pathname === '/arrivals') {
+      const type = url.searchParams.get('type')
+      const id = url.searchParams.get('id') || ''
+      // Only numeric CTA ids, so callers can't use this to reach anything else
+      if (!['train', 'bus'].includes(type) || !/^\d{1,6}$/.test(id)) {
+        return new Response(JSON.stringify({ error: 'Bad request' }), { status: 400, headers: { 'Content-Type': 'application/json', ...cors(request) } })
+      }
+      try {
+        let res = await cachedJson(ctx, `${url.origin}/arrivals/${type}/${id}`, 20, async () => ({
+          fetchedAt: new Date().toISOString(),
+          arrivals: type === 'train' ? await trainArrivals(env.CTA_TRAIN_KEY, id) : await busArrivals(env.CTA_BUS_KEY, id),
+        }))
+        res = new Response(res.body, res)
+        for (const [k, v] of Object.entries(cors(request))) res.headers.set(k, v)
+        return res
+      } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), { status: 502, headers: { 'Content-Type': 'application/json', ...cors(request) } })
+      }
+    }
+
     if (url.pathname !== '/vehicles') return new Response('Not found', { status: 404 })
 
     // Share one upstream fetch across all viewers for CACHE_SECONDS
