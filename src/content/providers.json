@@ -2,29 +2,31 @@
   {
     "id": "cta-rail",
     "provider": "CTA 'L' trains",
-    "serves": "Green Line (Harlem/Lake, Ridgeland, Oak Park, Austin) and Blue Line Forest Park branch (Harlem, Oak Park, Austin)",
+    "serves": "Green Line (Harlem/Lake, Oak Park, Ridgeland, Austin) and Blue Line Forest Park branch (Harlem, Oak Park, Austin)",
     "who": "Everyone",
-    "phone": "",
+    "phone": "1-888-968-7282",
     "links": [
       { "label": "CTA rider info", "url": "https://www.transitchicago.com/" },
+      { "label": "Accessible transit", "url": "https://www.transitchicago.com/accessibility/" },
       { "label": "Elevator & accessibility status", "url": "https://www.transitchicago.com/travel-information/accessibility-status/" }
     ],
-    "notes": "Only some Oak Park stations are accessible. Check elevator status before you go.",
-    "verified": false,
-    "checkedOn": null
+    "notes": "Of the stations serving Oak Park, only Harlem/Lake (Green Line) is accessible in CTA's data. Check elevator status before you go. Phone is CTA customer service (1-888-YOUR-CTA).",
+    "verified": true,
+    "checkedOn": "2026-10-03"
   },
   {
     "id": "cta-bus",
     "provider": "CTA buses",
-    "serves": "Routes 20, 66, 70, 86, 90, 91, 126 along Austin Blvd and the Village's east edge",
+    "serves": "Route 90 on Harlem Ave, 91 on Austin Blvd, 86 on Narragansett, and 20, 66, 70 and 126, which end at Austin Blvd",
     "who": "Everyone",
-    "phone": "",
+    "phone": "1-888-968-7282",
     "links": [
-      { "label": "CTA rider info", "url": "https://www.transitchicago.com/" }
+      { "label": "CTA rider info", "url": "https://www.transitchicago.com/" },
+      { "label": "Accessible transit", "url": "https://www.transitchicago.com/accessibility/" }
     ],
-    "notes": "",
-    "verified": false,
-    "checkedOn": null
+    "notes": "ADA-certified riders ride free on CTA, Metra and Pace buses and trains (per Pace).",
+    "verified": true,
+    "checkedOn": "2026-10-03"
   },
   {
     "id": "pace-bus",
@@ -36,50 +38,50 @@
       { "label": "Pace rider info", "url": "https://www.pacebus.com/" },
       { "label": "Riders with disabilities", "url": "https://www.pacebus.com/riders-disabilities" }
     ],
-    "notes": "Stop accessibility is not recorded in our data. Shown as Unknown on the map, not as inaccessible.",
-    "verified": false,
-    "checkedOn": null
+    "notes": "Pace says all its fixed-route buses have ramps. Accessibility at individual stops isn't recorded in our data, so the map shows Unknown, not inaccessible.",
+    "verified": true,
+    "checkedOn": "2026-10-03"
   },
   {
     "id": "metra",
     "provider": "Metra Union Pacific West (UP-W)",
-    "serves": "Oak Park station (Marion St)",
+    "serves": "Oak Park station, 1115 W. North Blvd (fare zone 2)",
     "who": "Everyone",
     "phone": "",
     "links": [
       { "label": "Oak Park station", "url": "https://metra.com/train-lines/stations/oak-park" },
       { "label": "Accessibility at Metra", "url": "https://metra.com/accessibility" }
     ],
-    "notes": "",
-    "verified": false,
-    "checkedOn": null
+    "notes": "Metra lists the Oak Park station as accessible, with 1 ADA parking space. Our stops file has no accessibility value for it, so the map shows Unknown.",
+    "verified": true,
+    "checkedOn": "2026-10-03"
   },
   {
     "id": "pace-ada",
     "provider": "Pace ADA Paratransit",
-    "serves": "Door-to-door rides near fixed-route service",
-    "who": "ADA-certified riders",
-    "phone": "",
+    "serves": "Shared rides within 3/4 mile of Pace bus routes, on the same days and hours. Book the day before. $3.25 per trip.",
+    "who": "Riders certified for ADA paratransit by NITA",
+    "phone": "(800) 299-0765",
     "links": [
       { "label": "ADA Paratransit", "url": "https://www.pacebus.com/ada" },
       { "label": "West Suburban Cook reservation line", "url": "https://www.pacebus.com/directory/paratransit-reservation-line-west-suburban-cook-county" },
       { "label": "Taxi Access Program", "url": "https://www.pacebus.com/tap" }
     ],
-    "notes": "Pace On Demand and Cook County Dial-a-Ride do not cover Oak Park.",
-    "verified": false,
-    "checkedOn": null
+    "notes": "Reservations Mon–Fri 6 a.m.–6 p.m., weekends and holidays 8 a.m.–5 p.m. Pace On Demand and Cook County Dial-a-Ride list no Oak Park service.",
+    "verified": true,
+    "checkedOn": "2026-10-03"
   },
   {
     "id": "township",
     "provider": "Oak Park Township Senior Services",
-    "serves": "Curb-to-curb, lift-equipped rides; taxi coupon books",
-    "who": "Residents 60 and over, and adults with a disability",
+    "serves": "Curbside rides in wheelchair-lift vehicles throughout Oak Park and River Forest, plus select hospitals and medical facilities. Taxicab coupons.",
+    "who": "Older adults (60+) and people 18+ with disabilities",
     "phone": "(708) 383-4806",
     "links": [
       { "label": "Senior Services", "url": "https://oakparktownship.org/senior-services/" }
     ],
-    "notes": "No schedule, hours, or ridership published online. Call to ask.",
-    "verified": false,
-    "checkedOn": null
+    "notes": "Book 24 hours to one week ahead, first come, first served. Suggested donation $1 per ride.",
+    "verified": true,
+    "checkedOn": "2026-10-03"
   }
 ]
