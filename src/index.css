@@ -1305,6 +1305,14 @@ aside {
   font-size: 0.875rem;
 }
 
+.heat-toggle {
+  margin-bottom: 12px;
+}
+
+.heat-legend + p {
+  margin-top: 8px;
+}
+
 .heat-legend {
   max-width: 340px;
   font-variant-numeric: tabular-nums;

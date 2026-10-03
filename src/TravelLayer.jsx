@@ -18,8 +18,8 @@ function Clicks({ placing, onPlace }) {
   return null
 }
 
-export default function TravelLayer({ cells, cellM, minutes, start, end, placing, onPlace, result, palette }) {
-  const heat = useMemo(() => (minutes ? heatImage(cells, cellM, minutes) : null), [cells, cellM, minutes])
+export default function TravelLayer({ cells, cellM, minutes, scale, start, end, placing, onPlace, result, palette }) {
+  const heat = useMemo(() => (minutes ? heatImage(cells, cellM, minutes, scale) : null), [cells, cellM, minutes, scale])
   return (
     <>
       <Clicks placing={placing} onPlace={onPlace} />

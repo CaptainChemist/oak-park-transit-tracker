@@ -22,11 +22,34 @@ export function heatRgb(m) {
 
 export const heatGradient = `linear-gradient(to right, ${HEAT.join(', ')})`
 
+// Time saved by transit vs walking: a separate green scale so it can't be
+// read as travel time. No saving stays clear, so the plain map shows where
+// walking is just as good; color fades in over the first few minutes saved.
+export const SAVED = ['#D9F0D3', '#ACD39E', '#5AAE61', '#1B7837', '#00441B']
+export const MAX_SAVED = 30
+const SAVED_RGB = SAVED.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)))
+const FADE_IN = 3
+
+export function savedRgba(m) {
+  if (m <= 0) return null
+  const t = (Math.min(m, MAX_SAVED) / MAX_SAVED) * (SAVED_RGB.length - 1)
+  const i = Math.min(Math.floor(t), SAVED_RGB.length - 2)
+  const f = t - i
+  const rgb = SAVED_RGB[i].map((c, k) => Math.round(c + (SAVED_RGB[i + 1][k] - c) * f))
+  return [...rgb, Math.round(255 * Math.min(1, m / FADE_IN))]
+}
+
+export const savedGradient = `linear-gradient(to right, transparent, ${SAVED.join(', ')})`
+
+const timeRgba = (m) => [...heatRgb(m), 255]
+
 const SCALE = 6
 const KY = 111320
 const KX = 111320 * Math.cos((41.887 * Math.PI) / 180) // same projection as build_travel.py
 
-export function heatImage(cells, cellM, minutes) {
+// minutes per cell; scale: 'time' (travel time) or 'saved' (minutes saved by transit)
+export function heatImage(cells, cellM, minutes, scale = 'time') {
+  const color = scale === 'saved' ? savedRgba : timeRgba
   // Back to grid columns/rows: build_travel.py laid cells out every cellM meters
   const xs = cells.map(([, lon]) => lon * KX)
   const ys = cells.map(([lat]) => lat * KY)
@@ -72,12 +95,13 @@ export function heatImage(cells, cellM, minutes) {
           wsum += wt
         }
       }
-      const [r, g, b] = heatRgb(sum / wsum)
+      const rgba = color(sum / wsum)
+      if (!rgba) continue
       const o = (py * w + px) * 4
-      img.data[o] = r
-      img.data[o + 1] = g
-      img.data[o + 2] = b
-      img.data[o + 3] = 255
+      img.data[o] = rgba[0]
+      img.data[o + 1] = rgba[1]
+      img.data[o + 2] = rgba[2]
+      img.data[o + 3] = rgba[3]
     }
   }
   ctx.putImageData(img, 0, 0)

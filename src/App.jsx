@@ -200,6 +200,7 @@ export default function App() {
   const [pins, setPins] = useState({ start: null, end: null })
   const [travelDay, setTravelDay] = useState(todayType)
   const [travelTime, setTravelTime] = useState(nowHHMM)
+  const [heatView, setHeatView] = useState('time') // 'time' or 'saved' (Transit Time Saver)
 
   const busesOn = showBuses && (route || agencies.CTA || agencies.Pace)
 
@@ -283,13 +284,11 @@ export default function App() {
     if (!travelOn || !net || (!pins.start && !pins.end)) return null
     const t0 = toMinutes(travelTime)
     const began = performance.now()
-    const out =
-      pins.start && pins.end
-        ? { trip: trip(net, travelDay, pins.start, pins.end, t0) }
-        : pins.start
-          ? { minutes: fromStart(net, travelDay, pins.start, t0) }
-          : { minutes: toEnd(net, travelDay, pins.end, t0) }
-    return { ...out, ms: performance.now() - began }
+    if (pins.start && pins.end) return { trip: trip(net, travelDay, pins.start, pins.end, t0), ms: performance.now() - began }
+    const heat = pins.start ? fromStart(net, travelDay, pins.start, t0) : toEnd(net, travelDay, pins.end, t0)
+    // Minutes transit saves over walking the whole way (0 where walking is as fast)
+    const saved = heat.minutes.map((m, i) => Math.max(0, heat.walk[i] - m))
+    return { minutes: heat.minutes, saved, ms: performance.now() - began }
   }, [travelOn, net, pins, travelDay, travelTime])
 
   const placePin = (which, ll) => {
@@ -397,7 +396,8 @@ export default function App() {
                     ? {
                         cells: net.raw.cells,
                         cellM: net.raw.cellM,
-                        minutes: travelResult?.minutes ?? null,
+                        minutes: (heatView === 'saved' ? travelResult?.saved : travelResult?.minutes) ?? null,
+                        scale: heatView,
                         result: travelResult?.trip ?? null,
                         start: pins.start,
                         end: pins.end,
@@ -478,6 +478,9 @@ export default function App() {
                 time={travelTime}
                 setTime={setTravelTime}
                 result={travelResult?.trip ?? null}
+                saved={travelResult?.saved ?? null}
+                heatView={heatView}
+                setHeatView={setHeatView}
                 ms={travelResult?.ms ?? null}
                 palette={palette}
               />

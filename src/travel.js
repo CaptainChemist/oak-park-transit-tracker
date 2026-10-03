@@ -119,13 +119,17 @@ const median = (xs) => {
 // connection doesn't decide the map
 const SAMPLES = [0, 5, 10, 15, 20, 25, 30]
 
+// Each heat map returns { minutes, walk }: best time per cell (transit or
+// walking) and the walk-only time, so the map can also show time saved
+
 // (1) Start pin: minutes from `start` to every cell
 export function fromStart(net, day, start, t0) {
   const p = xy(start)
   const runs = SAMPLES.map((d) => raptor(net, day, p, t0 + d))
-  return net.cells.map((c, i) =>
-    median(runs.map((r, k) => arriveAt(net, r, p, c, t0 + SAMPLES[k], net.cellStops[i]).minutes)),
-  )
+  return {
+    minutes: net.cells.map((c, i) => median(runs.map((r, k) => arriveAt(net, r, p, c, t0 + SAMPLES[k], net.cellStops[i]).minutes))),
+    walk: net.cells.map((c) => walkMin(p, c)),
+  }
 }
 
 // (2) End pin: minutes from every cell to `end`. One forward search per cell
@@ -134,9 +138,12 @@ const END_SAMPLES = [0, 10, 20, 30]
 export function toEnd(net, day, end, t0) {
   const q = xy(end)
   const egress = net.near(q, ACCESS_M)
-  return net.cells.map((c) =>
-    median(END_SAMPLES.map((d) => arriveAt(net, raptor(net, day, c, t0 + d), c, q, t0 + d, egress).minutes)),
-  )
+  return {
+    minutes: net.cells.map((c) =>
+      median(END_SAMPLES.map((d) => arriveAt(net, raptor(net, day, c, t0 + d), c, q, t0 + d, egress).minutes)),
+    ),
+    walk: net.cells.map((c) => walkMin(c, q)),
+  }
 }
 
 // (3) Both pins: the fastest trip leaving at t0, as legs
