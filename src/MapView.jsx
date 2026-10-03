@@ -1,20 +1,32 @@
 import L from 'leaflet'
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { ACCESS, AGENCY_COLORS, accessOf, routeIds } from './data'
-import { BUS_SVG, TRAIN_SVG } from './icons'
+import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES } from './trails'
 
 const CENTER = [41.8875, -87.7915]
 
+// Reuse icon objects so Leaflet only swaps a bus's DOM element when its route or
+// heading changes. A fresh icon every render replaced the element under the
+// cursor, which could eat clicks and stopped the glide transition.
+const busIcons = new Map()
+
 function busIcon(v, live) {
   const color = live ? AGENCY_COLORS[v.agency] : '#9CA3AF'
-  return L.divIcon({
-    className: 'bus-marker',
-    html: `<div class="bus-heading" style="transform: rotate(${v.heading}deg)"><i style="border-bottom-color:${color}"></i></div>
-      <div class="bus" style="background:${color}">${BUS_SVG}<span>${v.route}</span></div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-  })
+  const heading = Math.round(v.heading / 15) * 15
+  const key = `${color}|${v.route}|${heading}`
+  if (!busIcons.has(key)) {
+    busIcons.set(
+      key,
+      L.divIcon({
+        className: 'bus-marker',
+        html: `<div class="bus" style="background:${color}">${BUS_SVG}<span>${v.route}</span><i class="bus-dir" style="transform: rotate(${heading}deg)">${ARROW_SVG}</i></div>`,
+        iconSize: [56, 22],
+        iconAnchor: [28, 11],
+      }),
+    )
+  }
+  return busIcons.get(key)
 }
 
 function stationIcon(fill, alert) {
