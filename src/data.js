@@ -118,6 +118,9 @@ export const loadBoundary = () => getJson('data/boundary.geojson')
 // First/last trip and trips per hour at Village stops (scripts/build_service.py)
 export const loadService = () => getJson('data/route-service.json')
 
+// Timetable and grid for the Travel tab (scripts/build_travel.py)
+export const loadTravel = () => getJson('data/travel.json')
+
 const BUS_PROXY = import.meta.env.VITE_BUS_PROXY_URL
 
 // Live CTA and Pace buses from the Cloudflare Worker (worker/). Falls back to

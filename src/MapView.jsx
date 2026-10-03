@@ -3,6 +3,7 @@ import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, Til
 import { ACCESS, accessOf, BUS_RANGE_M, metersFromVillage, routeIds, stopColor, vehicleRouteKey } from './data'
 import Arrivals from './Arrivals'
 import Fare from './Fare'
+import TravelLayer from './TravelLayer'
 import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES, vehicleKey } from './trails'
 
@@ -188,8 +189,10 @@ function Trail({ points, color, now, night, boundary }) {
   })
 }
 
-export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, focusRoute, onShowRoute, buses, trails, theme, palette }) {
+export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, focusRoute, onShowRoute, buses, trails, theme, palette, travel }) {
   const night = theme === 'night'
+  // Travel tab: clicks on the map drop pins, so stops and stations let clicks through
+  const picking = !!travel
   const alertsFor = (stop) =>
     alerts.filter(
       (a) => a.stationIds.includes(stop.stop_id) || (stop.agency === 'CTA' && a.routes.some((r) => routeIds(stop).includes(r))),
@@ -214,6 +217,7 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
         maxNativeZoom={16}
       />
       {boundary && <Boundary data={boundary} fade={fade} palette={palette} theme={theme} />}
+      {travel && <TravelLayer {...travel} palette={palette} />}
       {/* GeoJSON ignores new data, so the key changes whenever the visible set does */}
       {showRoutes && routes && (
         <GeoJSON
@@ -229,7 +233,9 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
           .filter((s) => s.stop_type !== 'rail_station')
           .map((s) => (
             <CircleMarker
-              key={`${s.agency}-${s.stop_id}`}
+              // Leaflet reads `interactive` only when a layer is created, so the key changes with it
+              key={`${s.agency}-${s.stop_id}-${picking}`}
+              interactive={!picking}
               center={[s.lat, s.lon]}
               radius={4.5}
               pathOptions={{ color: palette.ring, weight: 1.5, fillColor: fillFor(s), fillOpacity: 0.95 }}
@@ -260,7 +266,8 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
         .filter((s) => s.stop_type === 'rail_station')
         .map((s) => (
           <Marker
-            key={`${s.agency}-${s.stop_id}`}
+            key={`${s.agency}-${s.stop_id}-${picking}`}
+            interactive={!picking}
             position={[s.lat, s.lon]}
             icon={stationIcon(fillFor(s), alerts.some((a) => a.stationIds.includes(s.stop_id)))}
             zIndexOffset={500}

@@ -44,6 +44,8 @@ Every push to `main` deploys to GitHub Pages in about a minute. The deploy also 
 | `public/data/` | Stops CSV, prebuilt route lines, latest alerts |
 | `scripts/build_routes.py` | Rebuilds `routes.geojson` from CTA, Pace and Metra GTFS zips |
 | `src/RoutesPanel.jsx` | Routes tab and route mode: one route's hours and trips-per-hour charts |
+| `src/travel.js`, `src/TravelPanel.jsx`, `src/TravelLayer.jsx` | Travel tab: in-browser travel-time estimates (walk + wait + ride), heat maps and trip legs |
+| `scripts/build_travel.py` | Rebuilds `travel.json` (compact timetable + 100 m Village grid) from the same GTFS zips |
 | `scripts/build_service.py` | Rebuilds `route-service.json` (first/last trip, trips per hour at Village stops) from the same GTFS zips |
 | `scripts/build_boundary.py` | Rebuilds `boundary.geojson` (Village outline + 1/4-mile fade) from Census TIGERweb |
 | `scripts/fetch_alerts.py` | Pulls active CTA alerts that touch Oak Park routes and stations |

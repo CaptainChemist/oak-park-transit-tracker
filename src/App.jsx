@@ -10,6 +10,7 @@ import {
   loadLiveBuses,
   loadRoutes,
   loadService,
+  loadTravel,
   loadStops,
   metersFromVillage,
   nearVillage,
@@ -20,6 +21,11 @@ import {
 import MapView from './MapView'
 import ProviderGuide from './ProviderGuide'
 import RoutesPanel, { RouteBadge, todayType } from './RoutesPanel'
+import TravelPanel from './TravelPanel'
+import { fromStart, prepare, toEnd, trip } from './travel'
+
+const nowHHMM = () => new Date().toTimeString().slice(0, 5)
+const toMinutes = (hhmm) => +hhmm.slice(0, 2) * 60 + +hhmm.slice(3, 5)
 import StatusPanel from './StatusPanel'
 import { BUS_SVG, MOON_SVG, SUN_SVG, TRAIN_SVG } from './icons'
 import { addSnapshot, loadTrails } from './trails'
@@ -37,7 +43,7 @@ function liveCount(vehicles) {
 const timeOf = (iso) => new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
 // "About the data" wrapped to two lines once Routes made four tabs
-const TABS = { status: 'Status', routes: 'Routes', providers: 'Providers', about: 'About' }
+const TABS = { status: 'Status', routes: 'Routes', travel: 'Travel', providers: 'Providers', about: 'About' }
 
 const THEME_KEY = 'op-transit-theme'
 
@@ -188,6 +194,13 @@ export default function App() {
   const [route, setRoute] = useState(null)
   const [day, setDay] = useState(todayType)
 
+  // Travel time: pins, when, and the in-browser estimate (src/travel.js)
+  const [net, setNet] = useState(null)
+  const [placing, setPlacing] = useState('start')
+  const [pins, setPins] = useState({ start: null, end: null })
+  const [travelDay, setTravelDay] = useState(todayType)
+  const [travelTime, setTravelTime] = useState(nowHHMM)
+
   const busesOn = showBuses && (route || agencies.CTA || agencies.Pace)
 
   useEffect(() => {
@@ -258,6 +271,31 @@ export default function App() {
   const pickRoute = (key) => {
     setRoute(key)
     if (key) setTab('routes')
+  }
+
+  // Load the timetable the first time someone opens the Travel tab
+  const travelOn = tab === 'travel'
+  useEffect(() => {
+    if (travelOn && !net) loadTravel().then((d) => setNet(prepare(d)))
+  }, [travelOn, net])
+
+  const travelResult = useMemo(() => {
+    if (!travelOn || !net || (!pins.start && !pins.end)) return null
+    const t0 = toMinutes(travelTime)
+    const began = performance.now()
+    const out =
+      pins.start && pins.end
+        ? { trip: trip(net, travelDay, pins.start, pins.end, t0) }
+        : pins.start
+          ? { minutes: fromStart(net, travelDay, pins.start, t0) }
+          : { minutes: toEnd(net, travelDay, pins.end, t0) }
+    return { ...out, ms: performance.now() - began }
+  }, [travelOn, net, pins, travelDay, travelTime])
+
+  const placePin = (which, ll) => {
+    setPins((p) => ({ ...p, [which]: ll }))
+    // After the start goes down, the next click sets the end
+    setPlacing(which === 'start' && !pins.end ? 'end' : null)
   }
 
   const loading = !error && stops.length === 0
@@ -354,8 +392,23 @@ export default function App() {
                 showRoutes={showRoutes || !!route}
                 focusRoute={route}
                 onShowRoute={pickRoute}
-                buses={visibleBuses}
-                trails={showTrails && visibleBuses?.live ? trails : null}
+                travel={
+                  travelOn && net
+                    ? {
+                        cells: net.raw.cells,
+                        cellM: net.raw.cellM,
+                        minutes: travelResult?.minutes ?? null,
+                        result: travelResult?.trip ?? null,
+                        start: pins.start,
+                        end: pins.end,
+                        placing,
+                        onPlace: placePin,
+                      }
+                    : null
+                }
+                // Travel time is schedule-based, and moving vehicles would catch pin clicks
+                buses={travelOn ? null : visibleBuses}
+                trails={!travelOn && showTrails && visibleBuses?.live ? trails : null}
                 theme={theme}
                 palette={palette}
               />
@@ -408,6 +461,26 @@ export default function App() {
             {tab === 'status' && <StatusPanel alerts={alertData.alerts} fetchedAt={alertData.fetchedAt} />}
             {tab === 'routes' && (
               <RoutesPanel service={service} selected={route} onSelect={pickRoute} day={day} setDay={setDay} palette={palette} alerts={alertData.alerts} />
+            )}
+            {tab === 'travel' && (
+              <TravelPanel
+                ready={!!net}
+                placing={placing}
+                setPlacing={setPlacing}
+                start={pins.start}
+                end={pins.end}
+                clear={() => {
+                  setPins({ start: null, end: null })
+                  setPlacing('start')
+                }}
+                day={travelDay}
+                setDay={setTravelDay}
+                time={travelTime}
+                setTime={setTravelTime}
+                result={travelResult?.trip ?? null}
+                ms={travelResult?.ms ?? null}
+                palette={palette}
+              />
             )}
             {tab === 'providers' && <ProviderGuide />}
             {tab === 'about' && <AboutData />}

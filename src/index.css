@@ -1233,6 +1233,108 @@ aside {
   color: var(--accent-ink);
 }
 
+/* ---------- Travel time ---------- */
+
+.travel-pins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+
+.pin-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ring);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.pin-start,
+.travel-pin.pin-start {
+  background: #0f766e;
+}
+
+.pin-end,
+.travel-pin.pin-end {
+  background: #b42318;
+}
+
+.travel-pin {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50% 50% 50% 4px;
+  border: 2.5px solid #fff;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow);
+  cursor: grab;
+}
+
+.travel-hint {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  font-size: 0.875rem;
+}
+
+.travel-when {
+  display: flex;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.travel-when label {
+  display: grid;
+  gap: 3px;
+}
+
+.travel-when select,
+.travel-when input {
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.heat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.heat-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.heat-legend i {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.legs {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .route-banner {
   position: absolute;
   z-index: 1000;
