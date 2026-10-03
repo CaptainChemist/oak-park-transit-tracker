@@ -47,6 +47,8 @@ export async function loadStops() {
 
 export const loadRoutes = () => getJson('data/routes.geojson')
 
+export const loadBoundary = () => getJson('data/boundary.geojson')
+
 const BUS_PROXY = import.meta.env.VITE_BUS_PROXY_URL
 
 // Live CTA and Pace buses from the Cloudflare Worker (worker/). Falls back to
@@ -61,6 +63,36 @@ export async function loadLiveBuses() {
     const sample = await getJson('data/bus-vehicles-sample.json')
     return { ...sample, live: false, error: e.message }
   }
+}
+
+// Stops across Harlem/Austin sit within ~85 m of the Village line; the next
+// closest (Lake and Madison in River Forest/Forest Park) are 150 m+ out.
+const ACROSS_STREET_M = 100
+
+// Distance in meters from a stop to the Village outline (flat-earth, fine at this scale)
+function metersToBoundary(stop, boundary) {
+  const village = boundary.features.find((f) => f.properties.kind === 'village')
+  const kx = 111320 * Math.cos((stop.lat * Math.PI) / 180)
+  const ky = 111320
+  const px = stop.lon * kx
+  const py = stop.lat * ky
+  let best = Infinity
+  for (const ring of village.geometry.coordinates) {
+    for (let i = 1; i < ring.length; i++) {
+      const ax = ring[i - 1][0] * kx, ay = ring[i - 1][1] * ky
+      const bx = ring[i][0] * kx, by = ring[i][1] * ky
+      const dx = bx - ax, dy = by - ay
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)))
+      best = Math.min(best, Math.hypot(px - ax - t * dx, py - ay - t * dy))
+    }
+  }
+  return best
+}
+
+// Inside the Village, or just across a border street from it
+export function nearVillage(stop, boundary) {
+  if (stop.in_oak_park === 'Y') return true
+  return boundary ? metersToBoundary(stop, boundary) <= ACROSS_STREET_M : false
 }
 
 export async function loadAlerts() {

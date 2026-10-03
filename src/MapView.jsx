@@ -1,5 +1,5 @@
 import L from 'leaflet'
-import { CircleMarker, GeoJSON, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
+import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { ACCESS, AGENCY_COLORS, accessOf, routeIds } from './data'
 import { BUS_SVG, TRAIN_SVG } from './icons'
 import { TRAIL_MINUTES } from './trails'
@@ -24,6 +24,39 @@ function stationIcon(fill, alert) {
     iconSize: [26, 26],
     iconAnchor: [13, 13],
   })
+}
+
+const BOUNDARY_COLOR = '#374151' // neutral, so it doesn't read as a Pace route
+const FADE_COLOR = '#f7f7f5' // matches --bg in index.css
+const FADE_MAX = 1 // basemap opacity hidden past 1/4 mile; lower to keep faint streets
+
+// Fade masks are stacked, each covering everything past its distance from the
+// Village line. Pick each mask's opacity so the stack ramps linearly to FADE_MAX.
+function fadeStyle(feature, steps) {
+  const k = feature.properties.step
+  const cover = (i) => (i < 0 ? 0 : (FADE_MAX * (i + 1)) / steps)
+  return {
+    stroke: false,
+    fillColor: FADE_COLOR,
+    fillOpacity: 1 - (1 - cover(k)) / (1 - cover(k - 1)),
+  }
+}
+
+function Boundary({ data, fade }) {
+  const fades = { ...data, features: data.features.filter((f) => f.properties.kind === 'fade') }
+  const village = { ...data, features: data.features.filter((f) => f.properties.kind === 'village') }
+  return (
+    <>
+      {/* Above the basemap tiles (200), below routes and stops (400) */}
+      <Pane name="fade" style={{ zIndex: 250 }}>
+        {fade && <GeoJSON data={fades} style={(f) => fadeStyle(f, fades.features.length)} interactive={false} />}
+      </Pane>
+      {/* Above routes (400) so Harlem/Austin bus lines don't hide it; below bus stops (460) and icons (600) */}
+      <Pane name="boundary" style={{ zIndex: 450 }}>
+        <GeoJSON data={village} style={{ color: BOUNDARY_COLOR, weight: 3, dashArray: '10 6', fill: false }} interactive={false} />
+      </Pane>
+    </>
+  )
 }
 
 function routeStyle(feature) {
@@ -88,7 +121,7 @@ function Trail({ points, color, now }) {
   })
 }
 
-export default function MapView({ stops, routes, alerts, colorBy, showRoutes, buses, trails }) {
+export default function MapView({ stops, routes, boundary, fade, alerts, colorBy, showRoutes, buses, trails }) {
   const alertsFor = (stop) =>
     alerts.filter(
       (a) => a.stationIds.includes(stop.stop_id) || (stop.agency === 'CTA' && a.routes.some((r) => routeIds(stop).includes(r))),
@@ -102,22 +135,26 @@ export default function MapView({ stops, routes, alerts, colorBy, showRoutes, bu
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      {boundary && <Boundary data={boundary} fade={fade} />}
       {showRoutes && routes && <GeoJSON key="routes" data={routes} style={routeStyle} />}
 
-      {stops
-        .filter((s) => s.stop_type !== 'rail_station')
-        .map((s) => (
-          <CircleMarker
-            key={`${s.agency}-${s.stop_id}`}
-            center={[s.lat, s.lon]}
-            radius={4.5}
-            pathOptions={{ color: '#fff', weight: 1.5, fillColor: fillFor(s), fillOpacity: 0.95 }}
-          >
-            <Popup>
-              <StopPopup stop={s} alerts={alertsFor(s)} />
-            </Popup>
-          </CircleMarker>
-        ))}
+      {/* Own pane so bus stops draw over the Village line (450) but under station/bus icons (600) */}
+      <Pane name="stops" style={{ zIndex: 460 }}>
+        {stops
+          .filter((s) => s.stop_type !== 'rail_station')
+          .map((s) => (
+            <CircleMarker
+              key={`${s.agency}-${s.stop_id}`}
+              center={[s.lat, s.lon]}
+              radius={4.5}
+              pathOptions={{ color: '#fff', weight: 1.5, fillColor: fillFor(s), fillOpacity: 0.95 }}
+            >
+              <Popup>
+                <StopPopup stop={s} alerts={alertsFor(s)} />
+              </Popup>
+            </CircleMarker>
+          ))}
+      </Pane>
 
       {buses &&
         trails &&

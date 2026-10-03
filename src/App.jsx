@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import AboutData from './AboutData'
-import { ACCESS, AGENCY_COLORS, loadAlerts, loadLiveBuses, loadRoutes, loadStops } from './data'
+import { ACCESS, AGENCY_COLORS, loadAlerts, loadBoundary, loadLiveBuses, loadRoutes, loadStops, nearVillage } from './data'
 import MapView from './MapView'
 import ProviderGuide from './ProviderGuide'
 import StatusPanel from './StatusPanel'
@@ -14,6 +14,7 @@ const TABS = { status: 'Status', providers: 'Providers', about: 'About the data'
 export default function App() {
   const [stops, setStops] = useState([])
   const [routes, setRoutes] = useState(null)
+  const [boundary, setBoundary] = useState(null)
   const [alertData, setAlertData] = useState({ fetchedAt: null, alerts: [] })
   const [error, setError] = useState(null)
 
@@ -51,17 +52,18 @@ export default function App() {
   )
 
   useEffect(() => {
-    Promise.all([loadStops(), loadRoutes(), loadAlerts()])
-      .then(([s, r, a]) => {
-        setStops(s)
+    Promise.all([loadStops(), loadRoutes(), loadBoundary(), loadAlerts()])
+      .then(([s, r, b, a]) => {
+        setStops(s.map((stop) => ({ ...stop, nearVillage: nearVillage(stop, b) })))
         setRoutes(r)
+        setBoundary(b)
         setAlertData(a)
       })
       .catch((e) => setError(e.message))
   }, [])
 
   const visibleStops = useMemo(
-    () => stops.filter((s) => agencies[s.agency] && (!villageOnly || s.in_oak_park === 'Y')),
+    () => stops.filter((s) => agencies[s.agency] && (!villageOnly || s.nearVillage)),
     [stops, agencies, villageOnly],
   )
   const visibleRoutes = useMemo(
@@ -116,7 +118,17 @@ export default function App() {
           {error ? (
             <div className="error">Couldn't load data: {error}</div>
           ) : (
-            <MapView stops={visibleStops} routes={visibleRoutes} alerts={alertData.alerts} colorBy={colorBy} showRoutes={showRoutes} buses={visibleBuses} trails={showTrails && visibleBuses?.live ? trails : null} />
+            <MapView
+              stops={visibleStops}
+              routes={visibleRoutes}
+              boundary={boundary}
+              fade={villageOnly}
+              alerts={alertData.alerts}
+              colorBy={colorBy}
+              showRoutes={showRoutes}
+              buses={visibleBuses}
+              trails={showTrails && visibleBuses?.live ? trails : null}
+            />
           )}
 
           <div className="legend">
