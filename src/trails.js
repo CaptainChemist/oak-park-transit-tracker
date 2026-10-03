@@ -11,6 +11,9 @@ function km(a, b) {
   return Math.hypot(dx, dy)
 }
 
+// Bus and train ids come from different feeds, so include the mode
+export const vehicleKey = (v) => `${v.agency}-${v.mode ?? 'bus'}-${v.id}`
+
 export function loadTrails() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}
@@ -28,7 +31,7 @@ export function addSnapshot(trails, vehicles, fetchedAt) {
     if (kept.length) next[key] = kept
   }
   for (const v of vehicles) {
-    const key = `${v.agency}-${v.id}`
+    const key = vehicleKey(v)
     const pts = next[key] || []
     const last = pts[pts.length - 1]
     const p = { lat: v.lat, lon: v.lon, t }

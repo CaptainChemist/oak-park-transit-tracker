@@ -21,6 +21,12 @@ import { addSnapshot, loadTrails } from './trails'
 
 const BUS_POLL_MS = 30000
 
+function liveCount(vehicles) {
+  const trains = vehicles.filter((v) => v.mode === 'train').length
+  const buses = vehicles.length - trains
+  return trains ? `${buses} buses and ${trains} trains` : `${buses} buses`
+}
+
 const TABS = { status: 'Status', providers: 'Providers', about: 'About the data' }
 
 export default function App() {
@@ -124,7 +130,7 @@ export default function App() {
               </label>
               <label>
                 <input type="checkbox" checked={showBuses} onChange={(e) => setShowBuses(e.target.checked)} />
-                Live buses
+                Live vehicles
               </label>
               <label>
                 <input type="checkbox" checked={showTrails} disabled={!showBuses} onChange={(e) => setShowTrails(e.target.checked)} />
@@ -173,6 +179,10 @@ export default function App() {
               Live bus
             </span>
             <span>
+              <b className="legend-bus legend-train" dangerouslySetInnerHTML={{ __html: TRAIN_SVG }} />
+              Live train
+            </span>
+            <span>
               <i className="ring" />
               Station with alert
             </span>
@@ -180,8 +190,8 @@ export default function App() {
             {visibleBuses && (
               <span className={visibleBuses.live ? 'live' : 'stale'}>
                 {visibleBuses.live
-                  ? `● ${visibleBuses.vehicles.length} buses live, updated ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`
-                  : `Live bus feed unavailable. Showing a saved sample from ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`}
+                  ? `● ${liveCount(visibleBuses.vehicles)} live, updated ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`
+                  : `Live feed unavailable. Showing a saved sample from ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`}
               </span>
             )}
           </div>

@@ -2,31 +2,36 @@ import L from 'leaflet'
 import { CircleMarker, GeoJSON, MapContainer, Marker, Pane, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { ACCESS, AGENCY_COLORS, accessOf, routeIds } from './data'
 import { ARROW_SVG, BUS_SVG, TRAIN_SVG } from './icons'
-import { TRAIL_MINUTES } from './trails'
+import { TRAIL_MINUTES, vehicleKey } from './trails'
 
 const CENTER = [41.8875, -87.7915]
 
-// Reuse icon objects so Leaflet only swaps a bus's DOM element when its route or
-// heading changes. A fresh icon every render replaced the element under the
-// cursor, which could eat clicks and stopped the glide transition.
-const busIcons = new Map()
+const LINE_COLORS = { Green: '#009B3A', Blue: '#00A1DE' }
 
-function busIcon(v, live) {
-  const color = live ? AGENCY_COLORS[v.agency] : '#9CA3AF'
+const vehicleColor = (v) => (v.mode === 'train' ? LINE_COLORS[v.route] : AGENCY_COLORS[v.agency])
+
+// Reuse icon objects so Leaflet only swaps a vehicle's DOM element when its
+// route or heading changes. A fresh icon every render replaced the element
+// under the cursor, which could eat clicks and stopped the glide transition.
+const vehicleIcons = new Map()
+
+function vehicleIcon(v, live) {
+  const color = live ? vehicleColor(v) : '#9CA3AF'
+  const train = v.mode === 'train'
   const heading = Math.round(v.heading / 15) * 15
-  const key = `${color}|${v.route}|${heading}`
-  if (!busIcons.has(key)) {
-    busIcons.set(
+  const key = `${train}|${color}|${v.route}|${heading}`
+  if (!vehicleIcons.has(key)) {
+    vehicleIcons.set(
       key,
       L.divIcon({
         className: 'bus-marker',
-        html: `<div class="bus" style="background:${color}">${BUS_SVG}<span>${v.route}</span><i class="bus-dir" style="transform: rotate(${heading}deg)">${ARROW_SVG}</i></div>`,
+        html: `<div class="bus ${train ? 'train' : ''}" style="background:${color}">${train ? TRAIN_SVG : BUS_SVG}<span>${v.route}</span><i class="bus-dir" style="transform: rotate(${heading}deg)">${ARROW_SVG}</i></div>`,
         iconSize: [56, 22],
         iconAnchor: [28, 11],
       }),
     )
   }
-  return busIcons.get(key)
+  return vehicleIcons.get(key)
 }
 
 function stationIcon(fill, alert) {
@@ -172,8 +177,8 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
       {buses &&
         trails &&
         buses.vehicles.map((v) => {
-          const key = `${v.agency}-${v.id}`
-          return trails[key]?.length > 1 && <Trail key={`trail-${key}`} points={trails[key]} color={AGENCY_COLORS[v.agency]} now={now} />
+          const key = vehicleKey(v)
+          return trails[key]?.length > 1 && <Trail key={`trail-${key}`} points={trails[key]} color={vehicleColor(v)} now={now} />
         })}
 
       {stops
@@ -192,11 +197,24 @@ export default function MapView({ stops, routes, boundary, fade, alerts, colorBy
         ))}
 
       {buses?.vehicles?.map((v) => (
-        <Marker key={`${v.agency}-${v.id}`} position={[v.lat, v.lon]} icon={busIcon(v, buses.live)} zIndexOffset={1000}>
+        <Marker key={vehicleKey(v)} position={[v.lat, v.lon]} icon={vehicleIcon(v, buses.live)} zIndexOffset={v.mode === 'train' ? 1100 : 1000}>
           <Popup>
             <div className="popup">
-              <strong>{v.agency} {v.route} {v.routeName}</strong>
-              <div>Bus #{v.id}{v.delayed && <b> · delayed</b>}</div>
+              {v.mode === 'train' ? (
+                <>
+                  <strong>CTA {v.route} Line train {v.routeName}</strong>
+                  <div>
+                    Run #{v.id}
+                    {v.delayed && <b> · delayed</b>}
+                  </div>
+                  {v.nextStop && <div>{v.approaching ? 'Arriving at' : 'Next stop:'} {v.nextStop}</div>}
+                </>
+              ) : (
+                <>
+                  <strong>{v.agency} {v.route} {v.routeName}</strong>
+                  <div>Bus #{v.id}{v.delayed && <b> · delayed</b>}</div>
+                </>
+              )}
               <div className="muted">
                 {buses.live ? 'Live position' : 'Saved sample, not live'} as of {new Date(buses.fetchedAt).toLocaleTimeString()}
               </div>

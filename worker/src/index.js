@@ -1,11 +1,12 @@
-// Cloudflare Worker: CORS proxy for live bus positions on Oak Park routes.
+// Cloudflare Worker: CORS proxy for live bus and train positions on Oak Park routes.
 //
-// GET /vehicles -> { fetchedAt, vehicles: [{ agency, route, routeName, lat, lon, heading, id }], errors }
+// GET /vehicles -> { fetchedAt, vehicles: [{ agency, mode, route, routeName, lat, lon, heading, id }], errors }
 //
 // Pace has no official real-time API. This calls the undocumented JSON behind
 // the TMWebWatch live map, so it may break without notice.
-// CTA uses the Bus Tracker API with the CTA_BUS_KEY secret
-// (`npx wrangler secret put CTA_BUS_KEY`), which never reaches the browser.
+// CTA buses use the Bus Tracker API (CTA_BUS_KEY secret) and CTA trains the
+// Train Tracker API (CTA_TRAIN_KEY secret). Set them with
+// `npx wrangler secret put <NAME>`; they never reach the browser.
 // Only the Oak Park routes below can be requested, so this isn't an open proxy.
 
 const PACE = 'https://tmweb.pacebus.com/TMWebWatch/GoogleMap.aspx/getVehicles'
@@ -15,6 +16,9 @@ const ROUTES = { 307: 33, 309: 35, 311: 37, 313: 38, 314: 271, 315: 39, 318: 41 
 
 const CTA = 'https://www.ctabustracker.com/bustime/api/v2/getvehicles'
 const CTA_ROUTES = ['20', '66', '70', '86', '90', '91', '126'] // max 10 per request
+
+const CTA_TRAINS = 'https://lapi.transitchicago.com/api/1.0/ttpositions.aspx'
+const TRAIN_LINES = { g: 'Green', blue: 'Blue' }
 
 const ALLOWED_ORIGINS = [
   'https://captainchemist.github.io',
@@ -43,6 +47,7 @@ async function fetchRoute(routeNumber, routeID) {
   const { d } = await res.json()
   return (d || []).map((v) => ({
     agency: 'Pace',
+    mode: 'bus',
     route: String(routeNumber),
     routeName: v.routeName,
     lat: v.lat,
@@ -63,6 +68,7 @@ async function fetchCta(key) {
   if (!body.vehicle && fatal.length) throw new Error(`CTA: ${fatal.map((e) => e.msg).join('; ')}`)
   return (body.vehicle || []).map((v) => ({
     agency: 'CTA',
+    mode: 'bus',
     route: v.rt,
     routeName: `to ${v.des}`,
     lat: +v.lat,
@@ -73,10 +79,35 @@ async function fetchCta(key) {
   }))
 }
 
+async function fetchCtaTrains(key) {
+  if (!key) throw new Error('CTA trains: no CTA_TRAIN_KEY secret')
+  const url = `${CTA_TRAINS}?key=${encodeURIComponent(key)}&rt=G,Blue&outputType=JSON`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`CTA trains: ${res.status}`)
+  const body = (await res.json()).ctatt || {}
+  if (body.errCd && body.errCd !== '0') throw new Error(`CTA trains: ${body.errNm}`)
+  return (body.route || []).flatMap((r) =>
+    (r.train || []).map((t) => ({
+      agency: 'CTA',
+      mode: 'train',
+      route: TRAIN_LINES[r['@name']] || r['@name'],
+      routeName: t.destNm && t.destNm !== 'See train' ? `to ${t.destNm}` : '', // 'See train' is CTA's placeholder
+      lat: +t.lat,
+      lon: +t.lon,
+      heading: +t.heading,
+      id: t.rn,
+      nextStop: t.nextStaNm,
+      approaching: t.isApp === '1',
+      delayed: t.isDly === '1',
+    })),
+  )
+}
+
 async function vehicles(env) {
   const results = await Promise.allSettled([
     ...Object.entries(ROUTES).map(([n, id]) => fetchRoute(n, id)),
     fetchCta(env.CTA_BUS_KEY),
+    fetchCtaTrains(env.CTA_TRAIN_KEY),
   ])
   const ok = results.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value)
   const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason.message)
