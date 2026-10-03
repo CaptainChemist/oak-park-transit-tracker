@@ -1,1 +1,54 @@
 # Oak Park Transit Tracker
+
+One page for Oak Park residents that shows transit stops, routes, accessibility, service alerts and transportation providers. Built at [Day in Our Data](https://github.com/oak-park-cisc/Oak_Park_Day_in_our_Data), October 3, 2026, from starter project [08: Build the Oak Park transit dashboard](https://github.com/oak-park-cisc/Oak_Park_Day_in_our_Data/blob/main/starter-projects/08-build-the-oak-park-transit-dashboard.md).
+
+**Live site:** https://captainchemist.github.io/oak-park-transit-tracker/
+
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:5173/oak-park-transit-tracker/
+
+Every push to `main` deploys to GitHub Pages in about a minute. The deploy also re-runs every 15 minutes to refresh CTA alerts.
+
+## Where things live
+
+| Path | What |
+|---|---|
+| `src/MapView.jsx` | Leaflet map, stop markers and popups, route lines |
+| `src/StatusPanel.jsx` | Local notices + CTA elevator and service alerts |
+| `src/ProviderGuide.jsx` | Provider cards |
+| `src/content/providers.json` | **Edit without code:** provider guide rows |
+| `src/content/notices.json` | **Edit without code:** block parties, closures |
+| `public/data/` | Stops CSV, prebuilt route lines, latest alerts |
+| `scripts/build_routes.py` | Rebuilds `routes.geojson` from CTA, Pace and Metra GTFS zips |
+| `scripts/fetch_alerts.py` | Pulls active CTA alerts that touch Oak Park routes and stations |
+
+### Adding a local notice
+
+Add an object to `src/content/notices.json`:
+
+```json
+{
+  "type": "Block party",
+  "title": "Short title",
+  "location": "Street and block",
+  "dates": "Oct 10, 2-8 p.m.",
+  "source": "https://link-to-where-you-found-it"
+}
+```
+
+### Checking a provider row
+
+After you check a row against the provider's page, set `"verified": true` and `"checkedOn": "2026-10-03"` in `providers.json`. Until then the card shows an "unverified" tag.
+
+## Data and limits
+
+- Stops come from the Day in Our Data snapshot (`transit-stops-oak-park.csv`), not a live schedule.
+- `weekday_trips` counts a single weekday (September 9, 2026). It isn't a headway.
+- Pace stop accessibility isn't recorded, so the map shows it as **Unknown**, not inaccessible.
+- CTA alerts come from the [Customer Alerts API](https://www.transitchicago.com/developers/alerts/). Pace and Metra alerts aren't included yet.

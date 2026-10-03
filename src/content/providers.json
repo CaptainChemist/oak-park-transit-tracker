@@ -1,0 +1,85 @@
+[
+  {
+    "id": "cta-rail",
+    "provider": "CTA 'L' trains",
+    "serves": "Green Line (Harlem/Lake, Ridgeland, Oak Park, Austin) and Blue Line Forest Park branch (Harlem, Oak Park, Austin)",
+    "who": "Everyone",
+    "phone": "",
+    "links": [
+      { "label": "CTA rider info", "url": "https://www.transitchicago.com/" },
+      { "label": "Elevator & accessibility status", "url": "https://www.transitchicago.com/travel-information/accessibility-status/" }
+    ],
+    "notes": "Only some Oak Park stations are accessible. Check elevator status before you go.",
+    "verified": false,
+    "checkedOn": null
+  },
+  {
+    "id": "cta-bus",
+    "provider": "CTA buses",
+    "serves": "Routes 20, 66, 70, 86, 90, 91, 126 along Austin Blvd and the Village's east edge",
+    "who": "Everyone",
+    "phone": "",
+    "links": [
+      { "label": "CTA rider info", "url": "https://www.transitchicago.com/" }
+    ],
+    "notes": "",
+    "verified": false,
+    "checkedOn": null
+  },
+  {
+    "id": "pace-bus",
+    "provider": "Pace suburban buses",
+    "serves": "Routes 307, 309, 311, 313, 314, 315, 318",
+    "who": "Everyone",
+    "phone": "",
+    "links": [
+      { "label": "Pace rider info", "url": "https://www.pacebus.com/" },
+      { "label": "Riders with disabilities", "url": "https://www.pacebus.com/riders-disabilities" }
+    ],
+    "notes": "Stop accessibility is not recorded in our data. Shown as Unknown on the map, not as inaccessible.",
+    "verified": false,
+    "checkedOn": null
+  },
+  {
+    "id": "metra",
+    "provider": "Metra Union Pacific West (UP-W)",
+    "serves": "Oak Park station (Marion St)",
+    "who": "Everyone",
+    "phone": "",
+    "links": [
+      { "label": "Oak Park station", "url": "https://metra.com/train-lines/stations/oak-park" },
+      { "label": "Accessibility at Metra", "url": "https://metra.com/accessibility" }
+    ],
+    "notes": "",
+    "verified": false,
+    "checkedOn": null
+  },
+  {
+    "id": "pace-ada",
+    "provider": "Pace ADA Paratransit",
+    "serves": "Door-to-door rides near fixed-route service",
+    "who": "ADA-certified riders",
+    "phone": "",
+    "links": [
+      { "label": "ADA Paratransit", "url": "https://www.pacebus.com/ada" },
+      { "label": "West Suburban Cook reservation line", "url": "https://www.pacebus.com/directory/paratransit-reservation-line-west-suburban-cook-county" },
+      { "label": "Taxi Access Program", "url": "https://www.pacebus.com/tap" }
+    ],
+    "notes": "Pace On Demand and Cook County Dial-a-Ride do not cover Oak Park.",
+    "verified": false,
+    "checkedOn": null
+  },
+  {
+    "id": "township",
+    "provider": "Oak Park Township Senior Services",
+    "serves": "Curb-to-curb, lift-equipped rides; taxi coupon books",
+    "who": "Residents 60 and over, and adults with a disability",
+    "phone": "(708) 383-4806",
+    "links": [
+      { "label": "Senior Services", "url": "https://oakparktownship.org/senior-services/" }
+    ],
+    "notes": "No schedule, hours, or ridership published online. Call to ask.",
+    "verified": false,
+    "checkedOn": null
+  }
+]
