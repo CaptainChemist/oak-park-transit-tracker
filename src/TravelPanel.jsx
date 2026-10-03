@@ -2,8 +2,12 @@ import { routeColor } from './data'
 import { DAYS } from './RoutesPanel'
 import { BANDS } from './travel'
 
-// Viridis: perceptually even and colorblind-safe; bright = quick, dark = slow
-export const HEAT = ['#FDE725', '#90D743', '#35B779', '#21918C', '#31688E', '#443983', '#440154']
+// Viridis sampled at 13 even steps (one per band in travel.js BANDS, plus 60+):
+// perceptually even and colorblind-safe; bright = quick, dark = slow
+export const HEAT = [
+  '#FDE725', '#C8E020', '#90D743', '#5EC962', '#35B779', '#20A486', '#21918C',
+  '#287C8E', '#31688E', '#3B528B', '#443983', '#481F70', '#440154',
+]
 
 const clock = (m) => {
   const h = Math.floor(m / 60) % 24
@@ -12,17 +16,23 @@ const clock = (m) => {
 }
 const mins = (m) => `${Math.max(1, Math.round(m))} min`
 
+// One block per 5-minute band, labeled every 15 minutes
 function Legend() {
-  const labels = [...BANDS.map((b, i) => `${i ? BANDS[i - 1] : 0}–${b}`), `${BANDS.at(-1)}+`]
   return (
-    <div className="heat-legend" aria-label="Minutes">
-      {labels.map((l, i) => (
-        <span key={l}>
-          <i style={{ background: HEAT[i] }} />
-          {l}
-        </span>
-      ))}
-      <span className="muted small">minutes</span>
+    <div className="heat-legend" role="img" aria-label="Colors in 5-minute steps from 0 to 60 minutes and over">
+      <div className="heat-strip">
+        {HEAT.map((c, i) => (
+          <i key={c} style={{ background: c }} title={i < BANDS.length ? `${i ? BANDS[i - 1] : 0}–${BANDS[i]} min` : `${BANDS.at(-1)}+ min`} />
+        ))}
+      </div>
+      <div className="heat-ticks muted small">
+        {[0, 15, 30, 45].map((m) => (
+          <span key={m} style={{ left: `${(m / 5 / HEAT.length) * 100}%` }}>
+            {m}
+          </span>
+        ))}
+        <span style={{ left: `${(12 / HEAT.length) * 100}%` }}>60+ min</span>
+      </div>
     </div>
   )
 }

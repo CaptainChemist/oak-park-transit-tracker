@@ -1306,24 +1306,30 @@ aside {
 }
 
 .heat-legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  font-size: 0.8125rem;
+  max-width: 340px;
   font-variant-numeric: tabular-nums;
 }
 
-.heat-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+.heat-strip {
+  display: flex;
+  height: 14px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.heat-legend i {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+.heat-strip i {
+  flex: 1;
+}
+
+.heat-ticks {
+  position: relative;
+  height: 18px;
+  margin-top: 3px;
+}
+
+.heat-ticks span {
+  position: absolute;
+  white-space: nowrap;
 }
 
 .legs {

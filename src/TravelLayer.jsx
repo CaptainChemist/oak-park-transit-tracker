@@ -27,8 +27,9 @@ export default function TravelLayer({ cells, cellM, minutes, start, end, placing
   return (
     <>
       <Clicks placing={placing} onPlace={onPlace} />
-      {/* Over the basemap (200), under route lines (400) so streets and lines stay readable */}
-      <Pane name="heat" style={{ zIndex: 300 }}>
+      {/* Over the basemap (200), under route lines (400) so streets and lines stay readable.
+          Cells are opaque and the pane is see-through, so where cells overlap they don't darken. */}
+      <Pane name="heat" style={{ zIndex: 300, opacity: 0.55 }}>
         {minutes &&
           cells.map(([lat, lon], i) => (
             <Rectangle
@@ -37,7 +38,7 @@ export default function TravelLayer({ cells, cellM, minutes, start, end, placing
                 [lat - halfLat(cellM), lon - halfLon(cellM, lat)],
                 [lat + halfLat(cellM), lon + halfLon(cellM, lat)],
               ]}
-              pathOptions={{ stroke: false, fillColor: HEAT[band(minutes[i])], fillOpacity: 0.55 }}
+              pathOptions={{ stroke: false, fillColor: HEAT[band(minutes[i])], fillOpacity: 1 }}
               interactive={false}
             />
           ))}
