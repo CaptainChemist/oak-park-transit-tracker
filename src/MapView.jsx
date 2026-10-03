@@ -110,6 +110,15 @@ function StopPopup({ stop, alerts, palette }) {
       <div>
         <b>Wheelchair boarding:</b>{' '}
         <span className="access-pill" style={{ '--pill': palette.access[key] }}>{access.label}</span>
+        {stop.access_source && (
+          <span className="muted small">
+            {' '}
+            per{' '}
+            <a href={stop.access_source.url} target="_blank" rel="noreferrer">
+              {stop.access_source.label}
+            </a>
+          </span>
+        )}
       </div>
       {stop.weekday_trips && (
         <div className="muted">

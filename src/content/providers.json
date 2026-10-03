@@ -52,7 +52,7 @@
       { "label": "Oak Park station", "url": "https://metra.com/train-lines/stations/oak-park" },
       { "label": "Accessibility at Metra", "url": "https://metra.com/accessibility" }
     ],
-    "notes": "Metra lists the Oak Park station as accessible, with 1 ADA parking space. Our stops file has no accessibility value for it, so the map shows Unknown.",
+    "notes": "Metra lists the Oak Park station as accessible, with 1 ADA parking space. The map uses Metra's listing, since our stops file has no value for it.",
     "verified": true,
     "checkedOn": "2026-10-03"
   },

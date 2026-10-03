@@ -95,11 +95,20 @@ async function getJson(path) {
   return res.json()
 }
 
+// Accessibility the stops file leaves blank but the operator publishes.
+// Keyed by `${agency}:${stop_id}`; checked against the source on the date given.
+const ACCESS_OVERRIDES = {
+  'Metra:VOP-847': {
+    wheelchair_boarding: '1',
+    access_source: { label: 'Metra station page', url: 'https://metra.com/train-lines/stations/oak-park', checked: '2026-10-03' },
+  },
+}
+
 export async function loadStops() {
   const res = await fetch(base + 'data/transit-stops-oak-park.csv')
   const text = await res.text()
   const { data } = Papa.parse(text, { header: true, skipEmptyLines: true })
-  return data.map((s) => ({ ...s, lat: +s.latitude, lon: +s.longitude }))
+  return data.map((s) => ({ ...s, ...ACCESS_OVERRIDES[`${s.agency}:${s.stop_id}`], lat: +s.latitude, lon: +s.longitude }))
 }
 
 export const loadRoutes = () => getJson('data/routes.geojson')
