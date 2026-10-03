@@ -26,6 +26,7 @@ Every push to `main` deploys to GitHub Pages in about a minute. The deploy also 
 | `src/content/notices.json` | **Edit without code:** block parties, closures |
 | `public/data/` | Stops CSV, prebuilt route lines, latest alerts |
 | `scripts/build_routes.py` | Rebuilds `routes.geojson` from CTA, Pace and Metra GTFS zips |
+| `scripts/build_boundary.py` | Rebuilds `boundary.geojson` (Village outline + 1/4-mile fade) from Census TIGERweb |
 | `scripts/fetch_alerts.py` | Pulls active CTA alerts that touch Oak Park routes and stations |
 
 ### Adding a local notice
