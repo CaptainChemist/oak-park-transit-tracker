@@ -7,7 +7,7 @@ const CENTER = [41.8875, -87.7915]
 function busIcon(v, live) {
   return L.divIcon({
     className: '',
-    html: `<div class="bus ${live ? '' : 'bus-stale'}">
+    html: `<div class="bus ${live ? '' : 'bus-stale'}" style="${live ? `background:${AGENCY_COLORS[v.agency]}` : ''}">
       <span class="bus-arrow" style="transform: rotate(${v.heading}deg)">▲</span>${v.route}
     </div>`,
     iconSize: [44, 22],
@@ -61,7 +61,7 @@ function StopPopup({ stop, alerts }) {
   )
 }
 
-export default function MapView({ stops, routes, alerts, colorBy, showRoutes, pace }) {
+export default function MapView({ stops, routes, alerts, colorBy, showRoutes, buses }) {
   const alertsFor = (stop) =>
     alerts.filter(
       (a) => a.stationIds.includes(stop.stop_id) || (stop.agency === 'CTA' && a.routes.some((r) => routeIds(stop).includes(r))),
@@ -96,14 +96,14 @@ export default function MapView({ stops, routes, alerts, colorBy, showRoutes, pa
           </CircleMarker>
         )
       })}
-      {pace?.vehicles.map((v) => (
-        <Marker key={v.id} position={[v.lat, v.lon]} icon={busIcon(v, pace.live)} zIndexOffset={1000}>
+      {buses?.vehicles.map((v) => (
+        <Marker key={`${v.agency}-${v.id}`} position={[v.lat, v.lon]} icon={busIcon(v, buses.live)} zIndexOffset={1000}>
           <Popup>
             <div className="popup">
-              <strong>Pace {v.route} {v.routeName}</strong>
-              <div>Bus #{v.id}</div>
+              <strong>{v.agency} {v.route} {v.routeName}</strong>
+              <div>Bus #{v.id}{v.delayed && <b> · delayed</b>}</div>
               <div className="muted">
-                {pace.live ? 'Live position' : 'Saved sample, not live'} as of {new Date(pace.fetchedAt).toLocaleTimeString()}
+                {buses.live ? 'Live position' : 'Saved sample, not live'} as of {new Date(buses.fetchedAt).toLocaleTimeString()}
               </div>
             </div>
           </Popup>

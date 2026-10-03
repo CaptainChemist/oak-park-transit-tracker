@@ -1,0 +1,800 @@
+{
+ "fetchedAt": "2026-10-03T17:05:58.492Z",
+ "vehicles": [
+  {
+   "agency": "Pace",
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.77503,
+   "lon": -87.80226,
+   "heading": 225,
+   "id": "6376"
+  },
+  {
+   "agency": "Pace",
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.92386,
+   "lon": -87.80168,
+   "heading": 90,
+   "id": "20407"
+  },
+  {
+   "agency": "Pace",
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.87573,
+   "lon": -87.80455,
+   "heading": 0,
+   "id": "20468"
+  },
+  {
+   "agency": "Pace",
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.90211,
+   "lon": -87.80565,
+   "heading": 180,
+   "id": "20436"
+  },
+  {
+   "agency": "Pace",
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.76343,
+   "lon": -87.80201,
+   "heading": 90,
+   "id": "20418"
+  },
+  {
+   "agency": "Pace",
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.84577,
+   "lon": -87.80369,
+   "heading": 180,
+   "id": "20471"
+  },
+  {
+   "agency": "Pace",
+   "route": "307",
+   "routeName": "Harlem",
+   "lat": 41.8393,
+   "lon": -87.80324,
+   "heading": 0,
+   "id": "20403"
+  },
+  {
+   "agency": "Pace",
+   "route": "309",
+   "routeName": "Lake Street",
+   "lat": 41.88865,
+   "lon": -87.79479,
+   "heading": 90,
+   "id": "6357"
+  },
+  {
+   "agency": "Pace",
+   "route": "309",
+   "routeName": "Lake Street",
+   "lat": 41.89982,
+   "lon": -87.9414,
+   "heading": 90,
+   "id": "20456"
+  },
+  {
+   "agency": "Pace",
+   "route": "311",
+   "routeName": "Oak Park Avenue",
+   "lat": 41.86505,
+   "lon": -87.79371,
+   "heading": 0,
+   "id": "20409"
+  },
+  {
+   "agency": "Pace",
+   "route": "311",
+   "routeName": "Oak Park Avenue",
+   "lat": 41.82719,
+   "lon": -87.79273,
+   "heading": 180,
+   "id": "20454"
+  },
+  {
+   "agency": "Pace",
+   "route": "313",
+   "routeName": "St. Charles Road",
+   "lat": 41.83161,
+   "lon": -88.02463,
+   "heading": 270,
+   "id": "20485"
+  },
+  {
+   "agency": "Pace",
+   "route": "313",
+   "routeName": "St. Charles Road",
+   "lat": 41.89232,
+   "lon": -87.85139,
+   "heading": 270,
+   "id": "20446"
+  },
+  {
+   "agency": "Pace",
+   "route": "313",
+   "routeName": "St. Charles Road",
+   "lat": 41.89171,
+   "lon": -87.8489,
+   "heading": 90,
+   "id": "20448"
+  },
+  {
+   "agency": "Pace",
+   "route": "314",
+   "routeName": "Ridgeland Avenue",
+   "lat": 41.84969,
+   "lon": -87.78354,
+   "heading": 0,
+   "id": "20417"
+  },
+  {
+   "agency": "Pace",
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.78456,
+   "lon": -87.74137,
+   "heading": 180,
+   "id": "6366"
+  },
+  {
+   "agency": "Pace",
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.8226,
+   "lon": -87.76318,
+   "heading": 180,
+   "id": "6355"
+  },
+  {
+   "agency": "Pace",
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.82926,
+   "lon": -87.77317,
+   "heading": 0,
+   "id": "20424"
+  },
+  {
+   "agency": "Pace",
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.86649,
+   "lon": -87.77422,
+   "heading": 180,
+   "id": "20453"
+  },
+  {
+   "agency": "Pace",
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.88791,
+   "lon": -87.7741,
+   "heading": 90,
+   "id": "20467"
+  },
+  {
+   "agency": "Pace",
+   "route": "315",
+   "routeName": "Austin Boulevard",
+   "lat": 41.79104,
+   "lon": -87.74143,
+   "heading": 0,
+   "id": "20451"
+  },
+  {
+   "agency": "Pace",
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.90807,
+   "lon": -87.84701,
+   "heading": 90,
+   "id": "6361"
+  },
+  {
+   "agency": "Pace",
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.87952,
+   "lon": -87.81038,
+   "heading": 90,
+   "id": "20404"
+  },
+  {
+   "agency": "Pace",
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.90826,
+   "lon": -87.84629,
+   "heading": 270,
+   "id": "20415"
+  },
+  {
+   "agency": "Pace",
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.88437,
+   "lon": -87.80488,
+   "heading": 0,
+   "id": "20429"
+  },
+  {
+   "agency": "Pace",
+   "route": "318",
+   "routeName": "West North Avenue",
+   "lat": 41.90845,
+   "lon": -87.8271,
+   "heading": 90,
+   "id": "20474"
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Austin",
+   "lat": 41.88088253566197,
+   "lon": -87.71584483555385,
+   "heading": 268,
+   "id": "1437",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Austin",
+   "lat": 41.880761252509224,
+   "lon": -87.72550370958116,
+   "heading": 280,
+   "id": "8101",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Austin",
+   "lat": 41.88040542602539,
+   "lon": -87.75608825683594,
+   "heading": 273,
+   "id": "8181",
+   "delayed": true
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Austin",
+   "lat": 41.88025665283203,
+   "lon": -87.7696304321289,
+   "heading": 268,
+   "id": "1463",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.880191802978516,
+   "lon": -87.76512145996094,
+   "heading": 89,
+   "id": "8306",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.88044828935103,
+   "lon": -87.74537464488637,
+   "heading": 87,
+   "id": "8170",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.88053894042969,
+   "lon": -87.73807879192073,
+   "heading": 89,
+   "id": "8693",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.88138382523148,
+   "lon": -87.66708374023438,
+   "heading": 90,
+   "id": "8689",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.881468818301244,
+   "lon": -87.66575767880394,
+   "heading": 90,
+   "id": "1417",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.88318379720052,
+   "lon": -87.64198303222656,
+   "heading": 89,
+   "id": "8727",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.883293333333334,
+   "lon": -87.64143166666666,
+   "heading": 1,
+   "id": "8162",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "20",
+   "routeName": "to Michigan",
+   "lat": 41.88318634033203,
+   "lon": -87.64026407095102,
+   "heading": 91,
+   "id": "8302",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.894901275634766,
+   "lon": -87.77444458007812,
+   "heading": 103,
+   "id": "8819",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89484786987305,
+   "lon": -87.76026916503906,
+   "heading": 95,
+   "id": "1624",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89524841308594,
+   "lon": -87.72659374418713,
+   "heading": 91,
+   "id": "8185",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89552861168271,
+   "lon": -87.71092187790643,
+   "heading": 89,
+   "id": "8184",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89561080932617,
+   "lon": -87.70257254207836,
+   "heading": 89,
+   "id": "8585",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89588928222656,
+   "lon": -87.67721557617188,
+   "heading": 90,
+   "id": "1466",
+   "delayed": true
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89603042602539,
+   "lon": -87.67009723369893,
+   "heading": 88,
+   "id": "8177",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89603042602539,
+   "lon": -87.67001624474159,
+   "heading": 90,
+   "id": "8671",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89181950887044,
+   "lon": -87.63703918457031,
+   "heading": 6,
+   "id": "8130",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.895964189009234,
+   "lon": -87.63714877041903,
+   "heading": 1,
+   "id": "8174",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89230034568093,
+   "lon": -87.6202392578125,
+   "heading": 170,
+   "id": "8577",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.89109802246094,
+   "lon": -87.61239581637912,
+   "heading": 85,
+   "id": "8152",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Navy Pier",
+   "lat": 41.892608642578125,
+   "lon": -87.61002349853516,
+   "heading": 179,
+   "id": "1026",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Austin",
+   "lat": 41.89579922219981,
+   "lon": -87.62035369873047,
+   "heading": 355,
+   "id": "8186",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Austin",
+   "lat": 41.89507544381278,
+   "lon": -87.65358123779296,
+   "heading": 311,
+   "id": "8580",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Austin",
+   "lat": 41.89607293265207,
+   "lon": -87.66731262207031,
+   "heading": 267,
+   "id": "8586",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Austin",
+   "lat": 41.89602748552958,
+   "lon": -87.67045974731445,
+   "heading": 266,
+   "id": "8824",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "66",
+   "routeName": "to Austin",
+   "lat": 41.89571880158924,
+   "lon": -87.69438789004371,
+   "heading": 263,
+   "id": "8182",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Austin",
+   "lat": 41.90343166666667,
+   "lon": -87.634465,
+   "heading": 359,
+   "id": "8593",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Austin",
+   "lat": 41.90264892578125,
+   "lon": -87.711669921875,
+   "heading": 348,
+   "id": "8780",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Austin",
+   "lat": 41.902809143066406,
+   "lon": -87.711669921875,
+   "heading": 334,
+   "id": "8612",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Walton & Dearborn",
+   "lat": 41.902232818603515,
+   "lon": -87.75821685791016,
+   "heading": 89,
+   "id": "1462",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Walton & Dearborn",
+   "lat": 41.902748107910156,
+   "lon": -87.71824808323638,
+   "heading": 91,
+   "id": "8878",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Walton & Dearborn",
+   "lat": 41.899480533599856,
+   "lon": -87.70956668853759,
+   "heading": 117,
+   "id": "8021",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Walton & Dearborn",
+   "lat": 41.90361022949219,
+   "lon": -87.6508647777416,
+   "heading": 87,
+   "id": "1080",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "70",
+   "routeName": "to Walton & Dearborn",
+   "lat": 41.9038200378418,
+   "lon": -87.63697628099091,
+   "heading": 87,
+   "id": "1350",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "90",
+   "routeName": "to Harlem Blue Line",
+   "lat": 41.90963,
+   "lon": -87.80566166666667,
+   "heading": 0,
+   "id": "8395",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "90",
+   "routeName": "to Harlem Blue Line",
+   "lat": 41.94902666666667,
+   "lon": -87.80720666666667,
+   "heading": 0,
+   "id": "8347",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "90",
+   "routeName": "to Harlem Blue Line",
+   "lat": 41.96092592659643,
+   "lon": -87.80721282958984,
+   "heading": 359,
+   "id": "8754",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "90",
+   "routeName": "to Harlem Blue Line",
+   "lat": 41.98236846923828,
+   "lon": -87.8079833984375,
+   "heading": 42,
+   "id": "8256",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "90",
+   "routeName": "to Harlem Green Line",
+   "lat": 41.95738435828167,
+   "lon": -87.80731632398522,
+   "heading": 181,
+   "id": "8387",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "90",
+   "routeName": "to Harlem Green Line",
+   "lat": 41.909494972229005,
+   "lon": -87.80576972961425,
+   "heading": 178,
+   "id": "8234",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "91",
+   "routeName": "to Roosevelt",
+   "lat": 41.955460716696344,
+   "lon": -87.77686680064483,
+   "heading": 179,
+   "id": "1407",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "91",
+   "routeName": "to Roosevelt",
+   "lat": 41.9147027015686,
+   "lon": -87.77539825439453,
+   "heading": 179,
+   "id": "1057",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "91",
+   "routeName": "to Jefferson Park Blue Line",
+   "lat": 41.87045916995487,
+   "lon": -87.77422332763672,
+   "heading": 358,
+   "id": "1388",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "91",
+   "routeName": "to Jefferson Park Blue Line",
+   "lat": 41.87431289210464,
+   "lon": -87.77445220947266,
+   "heading": 358,
+   "id": "7998",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "91",
+   "routeName": "to Jefferson Park Blue Line",
+   "lat": 41.967692057291664,
+   "lon": -87.77472686767578,
+   "heading": 89,
+   "id": "1518",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "126",
+   "routeName": "to Congress Plaza",
+   "lat": 41.87738037109375,
+   "lon": -87.70113819401439,
+   "heading": 94,
+   "id": "8872",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "126",
+   "routeName": "to Congress Plaza",
+   "lat": 41.877892959949584,
+   "lon": -87.65129231297692,
+   "heading": 88,
+   "id": "8638",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "126",
+   "routeName": "to Congress Plaza",
+   "lat": 41.87812345999259,
+   "lon": -87.6329574584961,
+   "heading": 97,
+   "id": "8626",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "126",
+   "routeName": "to Austin",
+   "lat": 41.876651763916016,
+   "lon": -87.64885632745151,
+   "heading": 270,
+   "id": "1217",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "126",
+   "routeName": "to Austin",
+   "lat": 41.877288818359375,
+   "lon": -87.71076516544117,
+   "heading": 273,
+   "id": "8897",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "126",
+   "routeName": "to Austin",
+   "lat": 41.87667118419301,
+   "lon": -87.75405745072798,
+   "heading": 269,
+   "id": "8517",
+   "delayed": false
+  },
+  {
+   "agency": "CTA",
+   "route": "126",
+   "routeName": "to Austin",
+   "lat": 41.876670837402344,
+   "lon": -87.75483747629019,
+   "heading": 269,
+   "id": "8592",
+   "delayed": false
+  }
+ ],
+ "errors": []
+}

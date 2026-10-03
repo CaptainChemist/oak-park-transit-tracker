@@ -34,7 +34,7 @@ jobs:
       - run: npm run build
         env:
           # Set in repo Settings > Variables after deploying worker/ to Cloudflare
-          VITE_PACE_PROXY_URL: ${{ vars.PACE_PROXY_URL }}
+          VITE_BUS_PROXY_URL: ${{ vars.BUS_PROXY_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

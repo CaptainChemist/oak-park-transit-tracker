@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import AboutData from './AboutData'
-import { ACCESS, AGENCY_COLORS, loadAlerts, loadPaceVehicles, loadRoutes, loadStops } from './data'
+import { ACCESS, AGENCY_COLORS, loadAlerts, loadLiveBuses, loadRoutes, loadStops } from './data'
 import MapView from './MapView'
 import ProviderGuide from './ProviderGuide'
 import StatusPanel from './StatusPanel'
 
-const PACE_POLL_MS = 30000
+const BUS_POLL_MS = 30000
 
 const TABS = { status: 'Status', providers: 'Providers', about: 'About the data' }
 
@@ -21,19 +21,25 @@ export default function App() {
   const [villageOnly, setVillageOnly] = useState(false)
   const [showRoutes, setShowRoutes] = useState(true)
   const [showBuses, setShowBuses] = useState(true)
-  const [pace, setPace] = useState(null)
+  const [buses, setBuses] = useState(null)
+  const busesOn = showBuses && (agencies.CTA || agencies.Pace)
 
   useEffect(() => {
-    if (!showBuses || !agencies.Pace) return
+    if (!busesOn) return
     let cancelled = false
-    const tick = () => loadPaceVehicles().then((p) => !cancelled && setPace(p))
+    const tick = () => loadLiveBuses().then((b) => !cancelled && setBuses(b))
     tick()
-    const id = setInterval(tick, PACE_POLL_MS)
+    const id = setInterval(tick, BUS_POLL_MS)
     return () => {
       cancelled = true
       clearInterval(id)
     }
-  }, [showBuses, agencies.Pace])
+  }, [busesOn])
+
+  const visibleBuses = useMemo(
+    () => busesOn && buses && { ...buses, vehicles: buses.vehicles.filter((v) => agencies[v.agency]) },
+    [busesOn, buses, agencies],
+  )
 
   useEffect(() => {
     Promise.all([loadStops(), loadRoutes(), loadAlerts()])
@@ -85,7 +91,7 @@ export default function App() {
               </label>
               <label>
                 <input type="checkbox" checked={showBuses} onChange={(e) => setShowBuses(e.target.checked)} />
-                Live Pace buses
+                Live buses
               </label>
             </div>
             <div className="control-group segmented">
@@ -97,7 +103,7 @@ export default function App() {
           {error ? (
             <div className="error">Couldn't load data: {error}</div>
           ) : (
-            <MapView stops={visibleStops} routes={visibleRoutes} alerts={alertData.alerts} colorBy={colorBy} showRoutes={showRoutes} pace={showBuses && agencies.Pace ? pace : null} />
+            <MapView stops={visibleStops} routes={visibleRoutes} alerts={alertData.alerts} colorBy={colorBy} showRoutes={showRoutes} buses={visibleBuses} />
           )}
 
           <div className="legend">
@@ -112,11 +118,11 @@ export default function App() {
               Station with alert
             </span>
             <span className="muted">{visibleStops.length} stops shown</span>
-            {showBuses && agencies.Pace && pace && (
-              <span className={pace.live ? 'live' : 'stale'}>
-                {pace.live
-                  ? `● ${pace.vehicles.length} Pace buses live, updated ${new Date(pace.fetchedAt).toLocaleTimeString()}`
-                  : `Live Pace feed unavailable. Showing a saved sample from ${new Date(pace.fetchedAt).toLocaleTimeString()}`}
+            {visibleBuses && (
+              <span className={visibleBuses.live ? 'live' : 'stale'}>
+                {visibleBuses.live
+                  ? `● ${visibleBuses.vehicles.length} buses live, updated ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`
+                  : `Live bus feed unavailable. Showing a saved sample from ${new Date(visibleBuses.fetchedAt).toLocaleTimeString()}`}
               </span>
             )}
           </div>
