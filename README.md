@@ -2,7 +2,24 @@
 
 One page for Oak Park residents that shows transit stops, routes, accessibility, service alerts and transportation providers. Built at [Day in Our Data](https://github.com/oak-park-cisc/Oak_Park_Day_in_our_Data), October 3, 2026, from starter project [08: Build the Oak Park transit dashboard](https://github.com/oak-park-cisc/Oak_Park_Day_in_our_Data/blob/main/starter-projects/08-build-the-oak-park-transit-dashboard.md).
 
-**Live site:** https://captainchemist.github.io/oak-park-transit-tracker/
+**Live site:** https://captainchemist.github.io/oak-park-transit-tracker/ · [QR code to share](https://captainchemist.github.io/oak-park-transit-tracker/qr.html)
+
+<p>
+  <img src="docs/screenshot-day.jpg" alt="Day map of Oak Park with live CTA and Pace buses, Green and Blue Line stations, and the service alerts panel" width="360" />
+  <img src="docs/screenshot-night.jpg" alt="Night map with glowing live bus and train trails" width="360" />
+</p>
+
+## What it does
+
+- **Live buses and trains.** CTA and Pace buses and CTA Green and Blue Line trains near Oak Park, updated every 30 seconds, with fading trails of the last 15 minutes.
+- **Next arrivals.** Click a CTA station or bus stop to see the next trains or buses in each direction.
+- **Accessibility.** Color stops by wheelchair boarding. Unknown is shown as unknown, never as inaccessible.
+- **Service status.** CTA elevator outages and service alerts for the lines serving Oak Park, plus hand-entered local notices.
+- **Routes.** Service hours and trips per hour for every route.
+- **Who to call.** A guide to CTA, Pace, Metra, Pace ADA Paratransit and Township Senior Services rides.
+- **Day and night maps.** Night mode shows the trails glowing on a dark map.
+
+Built by Stephen Jensen and Cody MacNeil.
 
 ## Run locally
 
