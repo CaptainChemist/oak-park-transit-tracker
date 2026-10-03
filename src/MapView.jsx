@@ -96,7 +96,7 @@ export default function MapView({ stops, routes, alerts, colorBy, showRoutes, bu
           </CircleMarker>
         )
       })}
-      {buses?.vehicles.map((v) => (
+      {buses?.vehicles?.map((v) => (
         <Marker key={`${v.agency}-${v.id}`} position={[v.lat, v.lon]} icon={busIcon(v, buses.live)} zIndexOffset={1000}>
           <Popup>
             <div className="popup">

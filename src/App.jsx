@@ -37,7 +37,7 @@ export default function App() {
   }, [busesOn])
 
   const visibleBuses = useMemo(
-    () => busesOn && buses && { ...buses, vehicles: buses.vehicles.filter((v) => agencies[v.agency]) },
+    () => (busesOn && buses ? { ...buses, vehicles: buses.vehicles.filter((v) => agencies[v.agency]) } : null),
     [busesOn, buses, agencies],
   )
 
