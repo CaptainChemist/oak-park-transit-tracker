@@ -594,9 +594,10 @@ main {
 
 /* ---------- Markers ---------- */
 
-.bus-marker {
-  position: relative;
-}
+/* No position rule on .bus-marker itself: Leaflet's .leaflet-marker-icon is
+   absolute, which both places the marker and anchors the centered pill.
+   position: relative here put every marker in normal flow, so each one sat a
+   pill's height lower than the last. */
 
 .bus-marker .bus {
   position: absolute;
