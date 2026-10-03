@@ -1,17 +1,28 @@
 import L from 'leaflet'
-import { CircleMarker, GeoJSON, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { CircleMarker, GeoJSON, MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
 import { ACCESS, AGENCY_COLORS, accessOf, routeIds } from './data'
+import { BUS_SVG, TRAIN_SVG } from './icons'
+import { TRAIL_MINUTES } from './trails'
 
 const CENTER = [41.8875, -87.7915]
 
 function busIcon(v, live) {
+  const color = live ? AGENCY_COLORS[v.agency] : '#9CA3AF'
+  return L.divIcon({
+    className: 'bus-marker',
+    html: `<div class="bus-heading" style="transform: rotate(${v.heading}deg)"><i style="border-bottom-color:${color}"></i></div>
+      <div class="bus" style="background:${color}">${BUS_SVG}<span>${v.route}</span></div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+  })
+}
+
+function stationIcon(fill, alert) {
   return L.divIcon({
     className: '',
-    html: `<div class="bus ${live ? '' : 'bus-stale'}" style="${live ? `background:${AGENCY_COLORS[v.agency]}` : ''}">
-      <span class="bus-arrow" style="transform: rotate(${v.heading}deg)">▲</span>${v.route}
-    </div>`,
-    iconSize: [44, 22],
-    iconAnchor: [22, 11],
+    html: `<div class="station ${alert ? 'station-alert' : ''}" style="background:${fill}">${TRAIN_SVG}</div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
   })
 }
 
@@ -61,41 +72,75 @@ function StopPopup({ stop, alerts }) {
   )
 }
 
-export default function MapView({ stops, routes, alerts, colorBy, showRoutes, buses }) {
+// One segment per hop so older parts of the trail fade out
+function Trail({ points, color, now }) {
+  const maxAge = TRAIL_MINUTES * 60_000
+  return points.slice(1).map((p, i) => {
+    const prev = points[i]
+    const fresh = Math.max(0, 1 - (now - p.t) / maxAge)
+    return (
+      <Polyline
+        key={p.t}
+        positions={[[prev.lat, prev.lon], [p.lat, p.lon]]}
+        pathOptions={{ color, weight: 4, opacity: 0.15 + 0.7 * fresh, lineCap: 'round', interactive: false }}
+      />
+    )
+  })
+}
+
+export default function MapView({ stops, routes, alerts, colorBy, showRoutes, buses, trails }) {
   const alertsFor = (stop) =>
     alerts.filter(
       (a) => a.stationIds.includes(stop.stop_id) || (stop.agency === 'CTA' && a.routes.some((r) => routeIds(stop).includes(r))),
     )
+  const now = Date.now()
+  const fillFor = (s) => (colorBy === 'access' ? ACCESS[accessOf(s)].color : AGENCY_COLORS[s.agency])
 
   return (
-    <MapContainer center={CENTER} zoom={14} className="map" scrollWheelZoom>
+    <MapContainer center={CENTER} zoom={14} className="map" scrollWheelZoom preferCanvas>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {showRoutes && routes && <GeoJSON key="routes" data={routes} style={routeStyle} />}
-      {stops.map((s) => {
-        const rail = s.stop_type === 'rail_station'
-        const fill = colorBy === 'access' ? ACCESS[accessOf(s)].color : AGENCY_COLORS[s.agency]
-        const stationAlert = alerts.some((a) => a.stationIds.includes(s.stop_id))
-        return (
+
+      {stops
+        .filter((s) => s.stop_type !== 'rail_station')
+        .map((s) => (
           <CircleMarker
             key={`${s.agency}-${s.stop_id}`}
             center={[s.lat, s.lon]}
-            radius={rail ? 9 : 5}
-            pathOptions={{
-              color: stationAlert ? '#F59E0B' : '#fff',
-              weight: stationAlert ? 4 : rail ? 2.5 : 1.5,
-              fillColor: fill,
-              fillOpacity: 0.95,
-            }}
+            radius={4.5}
+            pathOptions={{ color: '#fff', weight: 1.5, fillColor: fillFor(s), fillOpacity: 0.95 }}
           >
             <Popup>
               <StopPopup stop={s} alerts={alertsFor(s)} />
             </Popup>
           </CircleMarker>
-        )
-      })}
+        ))}
+
+      {buses &&
+        trails &&
+        buses.vehicles.map((v) => {
+          const key = `${v.agency}-${v.id}`
+          return trails[key]?.length > 1 && <Trail key={`trail-${key}`} points={trails[key]} color={AGENCY_COLORS[v.agency]} now={now} />
+        })}
+
+      {stops
+        .filter((s) => s.stop_type === 'rail_station')
+        .map((s) => (
+          <Marker
+            key={`${s.agency}-${s.stop_id}`}
+            position={[s.lat, s.lon]}
+            icon={stationIcon(fillFor(s), alerts.some((a) => a.stationIds.includes(s.stop_id)))}
+            zIndexOffset={500}
+          >
+            <Popup>
+              <StopPopup stop={s} alerts={alertsFor(s)} />
+            </Popup>
+          </Marker>
+        ))}
+
       {buses?.vehicles?.map((v) => (
         <Marker key={`${v.agency}-${v.id}`} position={[v.lat, v.lon]} icon={busIcon(v, buses.live)} zIndexOffset={1000}>
           <Popup>

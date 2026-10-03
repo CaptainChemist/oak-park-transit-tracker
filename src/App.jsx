@@ -4,6 +4,8 @@ import { ACCESS, AGENCY_COLORS, loadAlerts, loadLiveBuses, loadRoutes, loadStops
 import MapView from './MapView'
 import ProviderGuide from './ProviderGuide'
 import StatusPanel from './StatusPanel'
+import { BUS_SVG, TRAIN_SVG } from './icons'
+import { addSnapshot, loadTrails } from './trails'
 
 const BUS_POLL_MS = 30000
 
@@ -22,12 +24,19 @@ export default function App() {
   const [showRoutes, setShowRoutes] = useState(true)
   const [showBuses, setShowBuses] = useState(true)
   const [buses, setBuses] = useState(null)
+  const [showTrails, setShowTrails] = useState(true)
+  const [trails, setTrails] = useState(loadTrails)
   const busesOn = showBuses && (agencies.CTA || agencies.Pace)
 
   useEffect(() => {
     if (!busesOn) return
     let cancelled = false
-    const tick = () => loadLiveBuses().then((b) => !cancelled && setBuses(b))
+    const tick = () =>
+      loadLiveBuses().then((b) => {
+        if (cancelled) return
+        setBuses(b)
+        if (b.live) setTrails((t) => addSnapshot(t, b.vehicles, b.fetchedAt))
+      })
     tick()
     const id = setInterval(tick, BUS_POLL_MS)
     return () => {
@@ -93,6 +102,10 @@ export default function App() {
                 <input type="checkbox" checked={showBuses} onChange={(e) => setShowBuses(e.target.checked)} />
                 Live buses
               </label>
+              <label>
+                <input type="checkbox" checked={showTrails} disabled={!showBuses} onChange={(e) => setShowTrails(e.target.checked)} />
+                Trails
+              </label>
             </div>
             <div className="control-group segmented">
               <button className={colorBy === 'agency' ? 'on' : ''} onClick={() => setColorBy('agency')}>Color by provider</button>
@@ -103,7 +116,7 @@ export default function App() {
           {error ? (
             <div className="error">Couldn't load data: {error}</div>
           ) : (
-            <MapView stops={visibleStops} routes={visibleRoutes} alerts={alertData.alerts} colorBy={colorBy} showRoutes={showRoutes} buses={visibleBuses} />
+            <MapView stops={visibleStops} routes={visibleRoutes} alerts={alertData.alerts} colorBy={colorBy} showRoutes={showRoutes} buses={visibleBuses} trails={showTrails && visibleBuses?.live ? trails : null} />
           )}
 
           <div className="legend">
@@ -113,6 +126,18 @@ export default function App() {
                 {label}
               </span>
             ))}
+            <span>
+              <i className="dot" />
+              Bus stop
+            </span>
+            <span>
+              <b className="legend-station" dangerouslySetInnerHTML={{ __html: TRAIN_SVG }} />
+              Rail station
+            </span>
+            <span>
+              <b className="legend-bus" dangerouslySetInnerHTML={{ __html: BUS_SVG }} />
+              Live bus
+            </span>
             <span>
               <i className="ring" />
               Station with alert

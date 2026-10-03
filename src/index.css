@@ -81,8 +81,25 @@ aside { border-left: 1px solid var(--border); background: var(--panel); overflow
   aside { border-left: 0; border-top: 1px solid var(--border); }
 }
 
-.bus { display: inline-flex; align-items: center; gap: 2px; background: #00539f; color: #fff; font: 600 11px/1 system-ui, sans-serif; padding: 3px 6px 3px 4px; border-radius: 11px; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); white-space: nowrap; }
-.bus-arrow { display: inline-block; font-size: 9px; }
-.bus-stale { background: #9ca3af; }
+.bus-marker { position: relative; }
+.bus-marker .bus { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 3px; color: #fff; font: 700 11px/1 system-ui, sans-serif; padding: 3px 7px 3px 5px; border-radius: 999px; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); white-space: nowrap; }
+.bus-marker .bus svg { flex: none; }
+/* Small pointer outside the pill showing which way the bus is heading */
+.bus-heading { position: absolute; inset: 0; pointer-events: none; }
+.bus-heading i { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 7px solid; }
+/* Glide between polls instead of jumping, except while zooming */
+.leaflet-marker-icon.bus-marker { transition: transform 1.5s ease-out; }
+.leaflet-zoom-anim .leaflet-marker-icon.bus-marker { transition: none; }
+
+.station { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #fff; border: 2.5px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+.station-alert { box-shadow: 0 0 0 3px #f59e0b, 0 1px 4px rgba(0, 0, 0, 0.35); }
+
+.legend i.dot { width: 9px; height: 9px; background: var(--muted); }
+.legend b.legend-station, .legend b.legend-bus { display: inline-grid; place-items: center; color: #fff; background: var(--muted); }
+.legend b.legend-station { width: 18px; height: 18px; border-radius: 50%; }
+.legend b.legend-station svg { width: 11px; height: 11px; }
+.legend b.legend-bus { padding: 2px 6px; border-radius: 999px; }
+.legend b.legend-bus svg { width: 11px; height: 11px; }
+
 .legend .live { color: #15803d; font-weight: 600; }
 .legend .stale { color: var(--warn); font-weight: 600; }
