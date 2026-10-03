@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import AboutData from './AboutData'
-import { ACCESS, AGENCY_COLORS, loadAlerts, loadBoundary, loadLiveBuses, loadRoutes, loadStops, nearVillage } from './data'
+import {
+  ACCESS,
+  AGENCY_COLORS,
+  BUS_RANGE_M,
+  FADE_M,
+  loadAlerts,
+  loadBoundary,
+  loadLiveBuses,
+  loadRoutes,
+  loadStops,
+  metersFromVillage,
+  nearVillage,
+} from './data'
 import MapView from './MapView'
 import ProviderGuide from './ProviderGuide'
 import StatusPanel from './StatusPanel'
@@ -46,9 +58,19 @@ export default function App() {
     }
   }, [busesOn])
 
+  // Buses within BUS_RANGE_M of the Village; in Village-only mode, only inside the fade (FADE_M)
+  const busRange = villageOnly ? FADE_M : BUS_RANGE_M
   const visibleBuses = useMemo(
-    () => (busesOn && buses ? { ...buses, vehicles: buses.vehicles.filter((v) => agencies[v.agency]) } : null),
-    [busesOn, buses, agencies],
+    () =>
+      busesOn && buses
+        ? {
+            ...buses,
+            vehicles: buses.vehicles.filter(
+              (v) => agencies[v.agency] && (!boundary || metersFromVillage(v, boundary) <= busRange),
+            ),
+          }
+        : null,
+    [busesOn, buses, agencies, boundary, busRange],
   )
 
   useEffect(() => {

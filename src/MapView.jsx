@@ -59,8 +59,9 @@ function Boundary({ data, fade }) {
   const village = { ...data, features: data.features.filter((f) => f.properties.kind === 'village') }
   return (
     <>
-      {/* Above the basemap tiles (200), below routes and stops (400) */}
-      <Pane name="fade" style={{ zIndex: 250 }}>
+      {/* Over tiles (200) and route lines/bus trails (400) so they fade out with the
+          basemap; under the Village line (450), bus stops (460) and icons (600) */}
+      <Pane name="fade" style={{ zIndex: 420 }}>
         {fade && <GeoJSON data={fades} style={(f) => fadeStyle(f, fades.features.length)} interactive={false} />}
       </Pane>
       {/* Above routes (400) so Harlem/Austin bus lines don't hide it; below bus stops (460) and icons (600) */}

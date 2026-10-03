@@ -68,16 +68,31 @@ export async function loadLiveBuses() {
 // Stops across Harlem/Austin sit within ~85 m of the Village line; the next
 // closest (Lake and Madison in River Forest/Forest Park) are 150 m+ out.
 const ACROSS_STREET_M = 100
+export const BUS_RANGE_M = 402 // live buses: 1/4 mile, same as the fade for now but tuned separately
+export const FADE_M = 402 // 1/4 mile; matches FADE_M in scripts/build_boundary.py
 
-// Distance in meters from a stop to the Village outline (flat-earth, fine at this scale)
-function metersToBoundary(stop, boundary) {
-  const village = boundary.features.find((f) => f.properties.kind === 'village')
-  const kx = 111320 * Math.cos((stop.lat * Math.PI) / 180)
+const villageRings = (boundary) => boundary.features.find((f) => f.properties.kind === 'village').geometry.coordinates
+
+// Even-odd ray cast against the Village outline
+function insideVillage({ lat, lon }, boundary) {
+  let inside = false
+  for (const ring of villageRings(boundary)) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i], [xj, yj] = ring[j]
+      if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside
+    }
+  }
+  return inside
+}
+
+// Distance in meters from a point to the Village outline (flat-earth, fine at this scale)
+function metersToBoundary({ lat, lon }, boundary) {
+  const kx = 111320 * Math.cos((lat * Math.PI) / 180)
   const ky = 111320
-  const px = stop.lon * kx
-  const py = stop.lat * ky
+  const px = lon * kx
+  const py = lat * ky
   let best = Infinity
-  for (const ring of village.geometry.coordinates) {
+  for (const ring of villageRings(boundary)) {
     for (let i = 1; i < ring.length; i++) {
       const ax = ring[i - 1][0] * kx, ay = ring[i - 1][1] * ky
       const bx = ring[i][0] * kx, by = ring[i][1] * ky
@@ -87,6 +102,11 @@ function metersToBoundary(stop, boundary) {
     }
   }
   return best
+}
+
+// Meters outside the Village, 0 if inside
+export function metersFromVillage(point, boundary) {
+  return insideVillage(point, boundary) ? 0 : metersToBoundary(point, boundary)
 }
 
 // Inside the Village, or just across a border street from it
