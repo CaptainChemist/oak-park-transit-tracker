@@ -85,6 +85,29 @@ function walkCells(net, { cell, snap }) {
   return dist
 }
 
+// You can always walk from a neighboring cell, so no cell should be slower than
+// a neighbor plus the hop. Each cell only checks its own short list of stops,
+// so without this an edge cell with few stops nearby can come out several
+// minutes slower than the cell next door. Multi-source Dijkstra over the cells.
+function relax(net, values) {
+  const out = Float64Array.from(values)
+  // Sweep cells in time order, repeating until nothing improves (two or three
+  // passes in practice; ~1,200 cells)
+  const order = Array.from(out.keys()).sort((a, b) => out[a] - out[b])
+  for (let changed = true; changed; ) {
+    changed = false
+    for (const c of order) {
+      for (const [n, w] of net.cellNbrs[c]) {
+        if (out[c] + w < out[n] - 1e-9) {
+          out[n] = out[c] + w
+          changed = true
+        }
+      }
+    }
+  }
+  return Array.from(out)
+}
+
 // Stops reachable on foot from an anchor: its cell's street-network list plus the snap
 const stopsNear = (net, a) => net.cellStops[a.cell].map(([s, w]) => [s, w + a.snap])
 
@@ -180,7 +203,10 @@ export function fromStart(net, day, start, t0) {
   const walk = walkCells(net, a)
   const runs = SAMPLES.map((d) => raptor(net, day, stopsNear(net, a), t0 + d))
   return {
-    minutes: net.cells.map((_, i) => median(runs.map((r, k) => arriveAt(r, walk[i], net.cellStops[i], t0 + SAMPLES[k]).minutes))),
+    minutes: relax(
+      net,
+      net.cells.map((_, i) => median(runs.map((r, k) => arriveAt(r, walk[i], net.cellStops[i], t0 + SAMPLES[k]).minutes))),
+    ),
     walk: Array.from(walk),
   }
 }
@@ -195,8 +221,11 @@ export function toEnd(net, day, end, t0) {
   const walk = walkCells(net, b)
   const egress = stopsNear(net, b)
   return {
-    minutes: net.cells.map((_, i) =>
-      median(END_SAMPLES.map((d) => arriveAt(raptor(net, day, net.cellStops[i], t0 + d), walk[i], egress, t0 + d).minutes)),
+    minutes: relax(
+      net,
+      net.cells.map((_, i) =>
+        median(END_SAMPLES.map((d) => arriveAt(raptor(net, day, net.cellStops[i], t0 + d), walk[i], egress, t0 + d).minutes)),
+      ),
     ),
     walk: Array.from(walk),
   }
